@@ -50,6 +50,13 @@ const Index = () => {
               搜尋
             </Button>
           </div>
+          <Link to="/estates">
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+              <LayoutGrid className="h-4 w-4" />
+              屋苑總覽
+            </Button>
+          </Link>
+          </div>
         </div>
       </header>
 
