@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { fetchOrders, groupByEstate, type OrderRecord } from "@/lib/api";
 import { EstateCard } from "@/components/EstateCard";
+import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const [urlParams] = useSearchParams();
