@@ -17,7 +17,8 @@ export interface OrderRecord {
 export async function fetchOrders(search?: string): Promise<OrderRecord[]> {
   const url = new URL(APPS_SCRIPT_URL);
   if (search) {
-    url.searchParams.set("search", search);
+    // Strip spaces so "park yoho" and "parkyoho" produce the same query
+    url.searchParams.set("search", search.replace(/\s/g, ""));
   }
   const response = await fetch(url.toString());
   if (!response.ok) {
