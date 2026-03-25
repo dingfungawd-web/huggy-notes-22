@@ -52,7 +52,7 @@ export function EstateCard({ estateName, orders }: EstateCardProps) {
               <div className="flex items-start gap-2">
                 <Tag className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <span className="font-medium">別名：</span>
+                  <span className="font-medium">地區：</span>
                   {aliases.map((a, i) => (
                     <Badge key={i} variant="outline" className="mr-1 mb-1">{a}</Badge>
                   ))}

@@ -175,14 +175,14 @@ const Estates = () => {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label>屋苑別名</Label>
+              <Label>地區</Label>
               <Input
-                placeholder="例如：Novoland 3A期、屯門 NovoLand..."
+                placeholder="例如：屯門、將軍澳..."
                 value={alias}
                 onChange={(e) => setAlias(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                加入後可用此名稱搜尋該屋苑
+                加入後可用此地區名稱搜尋該屋苑
               </p>
             </div>
             <div className="space-y-2">
