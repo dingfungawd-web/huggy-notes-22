@@ -14,12 +14,31 @@ const COLORS = [
   "hsl(120 45% 52%)",   // lime
 ];
 
+// Semantic colors for size exceed charts: standard = green, then escalating warm tones
+const EXCEED_COLOR_MAP: Record<string, string> = {
+  "標準內": "hsl(150 60% 45%)",   // green — safe
+  "超20cm": "hsl(45 90% 50%)",    // amber — mild warning
+  "超40cm": "hsl(25 90% 55%)",    // orange — moderate
+  "超60cm": "hsl(10 80% 55%)",    // red-orange — serious
+  "超80cm": "hsl(0 75% 50%)",     // red — critical
+  "超100cm": "hsl(340 80% 45%)",  // dark red
+};
+
+function getExceedColor(label: string): string {
+  if (EXCEED_COLOR_MAP[label]) return EXCEED_COLOR_MAP[label];
+  // For any exceed beyond mapped values, use darkest red
+  if (label.startsWith("超")) return "hsl(0 70% 40%)";
+  return "hsl(150 60% 45%)";
+}
+
 interface PieChartSectionProps {
   title: string;
   data: Distribution[];
+  /** Use semantic warning colors for size-exceed charts */
+  exceedMode?: boolean;
 }
 
-export function PieChartSection({ title, data }: PieChartSectionProps) {
+export function PieChartSection({ title, data, exceedMode = false }: PieChartSectionProps) {
   if (data.length === 0) return null;
 
   const chartData = data.map((d) => ({
@@ -27,6 +46,9 @@ export function PieChartSection({ title, data }: PieChartSectionProps) {
     value: d.count,
     percentage: d.percentage,
   }));
+
+  const getColor = (idx: number, name: string) =>
+    exceedMode ? getExceedColor(name) : COLORS[idx % COLORS.length];
 
   return (
     <div className="rounded-lg border bg-card p-3">
@@ -42,8 +64,8 @@ export function PieChartSection({ title, data }: PieChartSectionProps) {
             paddingAngle={2}
             dataKey="value"
           >
-            {chartData.map((_, idx) => (
-              <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+            {chartData.map((entry, idx) => (
+              <Cell key={idx} fill={getColor(idx, entry.name)} />
             ))}
           </Pie>
           <Tooltip
@@ -60,7 +82,7 @@ export function PieChartSection({ title, data }: PieChartSectionProps) {
             <div className="flex items-center gap-1.5 min-w-0">
               <span
                 className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                style={{ backgroundColor: getColor(idx, d.name) }}
               />
               <span className="truncate">{d.name}</span>
             </div>
