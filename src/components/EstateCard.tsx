@@ -77,7 +77,7 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
               <div className="flex items-start gap-2">
                 <Link2 className="h-5 w-5 text-foreground mt-0.5 shrink-0" />
                 <div>
-                  <span className="font-bold">正確歸類至：</span>
+                  <span className="font-bold">異常屋苑名稱正確歸類為：</span>
                   {correctEstates.map((c, i) => (
                     <span key={i} className="font-bold text-foreground mr-2">{c}</span>
                   ))}
