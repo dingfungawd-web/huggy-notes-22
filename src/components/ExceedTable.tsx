@@ -30,12 +30,14 @@ export function ExceedTable({ label, analysis }: ExceedTableProps) {
               <PieChartSection
                 title="高度分佈"
                 data={analysis.heightDistribution.map(b => ({ label: b.label, count: b.count, percentage: b.percentage }))}
+                exceedMode
               />
             )}
             {analysis.widthDistribution.length > 0 && (
               <PieChartSection
                 title="闊度分佈"
                 data={analysis.widthDistribution.map(b => ({ label: b.label, count: b.count, percentage: b.percentage }))}
+                exceedMode
               />
             )}
           </div>
