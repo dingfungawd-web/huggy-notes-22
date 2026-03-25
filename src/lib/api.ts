@@ -98,8 +98,19 @@ export async function fetchOrders(search?: string, signal?: AbortSignal): Promis
   // Expand search with 異常屋苑名稱正確歸類
   const searchTerms = await getExpandedSearchTerms(baseTerm);
 
-  // Build OR filter for all terms
-  const orFilter = searchTerms
+  // Build OR filter for all terms – include both space-stripped AND original forms
+  const patterns = new Set<string>();
+  for (const t of searchTerms) {
+    patterns.add(t); // space-stripped version
+  }
+  // Also add the original search term (lowercased, spaces preserved) so that
+  // e.g. "Park YOHO" matches package_notes containing "Park YOHO" with spaces.
+  const originalLower = search.trim().toLowerCase();
+  if (originalLower && !patterns.has(originalLower)) {
+    patterns.add(originalLower);
+  }
+
+  const orFilter = Array.from(patterns)
     .map((t) => `package_note.ilike.%${t}%`)
     .join(",");
 
