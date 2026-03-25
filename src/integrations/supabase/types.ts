@@ -14,7 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          created_at: string
+          customer_confirmation_date: string | null
+          fabric_color: string | null
+          frame_color: string | null
+          frame_count: number | null
+          framing_completion_date: string | null
+          height_mm: number | null
+          id: string
+          model: string | null
+          order_date: string | null
+          order_note: string | null
+          order_number: string | null
+          package_note: string | null
+          packaging_completion_date: string | null
+          scheduled_shipping_date: string | null
+          sewing_completion_date: string | null
+          shipping_date: string | null
+          source_file: string | null
+          source_month: string | null
+          special_note: string | null
+          status: string | null
+          width_mm: number | null
+        }
+        Insert: {
+          created_at?: string
+          customer_confirmation_date?: string | null
+          fabric_color?: string | null
+          frame_color?: string | null
+          frame_count?: number | null
+          framing_completion_date?: string | null
+          height_mm?: number | null
+          id?: string
+          model?: string | null
+          order_date?: string | null
+          order_note?: string | null
+          order_number?: string | null
+          package_note?: string | null
+          packaging_completion_date?: string | null
+          scheduled_shipping_date?: string | null
+          sewing_completion_date?: string | null
+          shipping_date?: string | null
+          source_file?: string | null
+          source_month?: string | null
+          special_note?: string | null
+          status?: string | null
+          width_mm?: number | null
+        }
+        Update: {
+          created_at?: string
+          customer_confirmation_date?: string | null
+          fabric_color?: string | null
+          frame_color?: string | null
+          frame_count?: number | null
+          framing_completion_date?: string | null
+          height_mm?: number | null
+          id?: string
+          model?: string | null
+          order_date?: string | null
+          order_note?: string | null
+          order_number?: string | null
+          package_note?: string | null
+          packaging_completion_date?: string | null
+          scheduled_shipping_date?: string | null
+          sewing_completion_date?: string | null
+          shipping_date?: string | null
+          source_file?: string | null
+          source_month?: string | null
+          special_note?: string | null
+          status?: string | null
+          width_mm?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
