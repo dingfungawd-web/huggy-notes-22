@@ -49,14 +49,14 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
 
       <CardContent className="pt-4 space-y-5 text-sm">
         {/* Meta info from web input */}
-        {(aliases.length > 0 || colors.length > 0 || correctEstates.length > 0 || notes.length > 0) && (
+        {(districts.length > 0 || colors.length > 0 || correctEstates.length > 0 || notes.length > 0) && (
           <div className="space-y-2">
-            {aliases.length > 0 && (
+            {districts.length > 0 && (
               <div className="flex items-start gap-2">
                 <Tag className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <div>
                   <span className="font-medium">地區：</span>
-                  {aliases.map((a, i) => (
+                  {districts.map((a, i) => (
                     <Badge key={i} variant="outline" className="mr-1 mb-1">{a}</Badge>
                   ))}
                 </div>
@@ -98,7 +98,7 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
           </div>
         )}
 
-        {(aliases.length > 0 || colors.length > 0 || correctEstates.length > 0 || notes.length > 0) && <Separator />}
+        {(districts.length > 0 || colors.length > 0 || correctEstates.length > 0 || notes.length > 0) && <Separator />}
 
         {/* ===== Section 2: 圓形圖分佈 ===== */}
         <div>
