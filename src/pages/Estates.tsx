@@ -22,7 +22,7 @@ import { Link } from "react-router-dom";
 const Estates = () => {
   const [filter, setFilter] = useState("");
   const [selectedEstate, setSelectedEstate] = useState<string | null>(null);
-  const [alias, setAlias] = useState("");
+  const [district, setDistrict] = useState("");
   const [doorWindowColor, setDoorWindowColor] = useState("");
   const [correctEstate, setCorrectEstate] = useState("");
   const [note, setNote] = useState("");
@@ -50,7 +50,7 @@ const Estates = () => {
     mutationFn: postEstateMeta,
     onSuccess: () => {
       toast({ title: "已儲存", description: "屋苑資料已成功更新" });
-      setAlias("");
+      setDistrict("");
       setDoorWindowColor("");
       setCorrectEstate("");
       setNote("");
@@ -64,13 +64,13 @@ const Estates = () => {
 
   const handleSubmit = () => {
     if (!selectedEstate) return;
-    if (!alias && !doorWindowColor && !correctEstate && !note) {
+    if (!district && !doorWindowColor && !correctEstate && !note) {
       toast({ title: "請輸入資料", description: "至少填寫一項內容", variant: "destructive" });
       return;
     }
     mutation.mutate({
       estateName: selectedEstate,
-      alias: alias || undefined,
+      district: district || undefined,
       doorWindowColor: doorWindowColor || undefined,
       correctEstate: correctEstate || undefined,
       note: note || undefined,
@@ -79,7 +79,7 @@ const Estates = () => {
 
   const openDialog = (estate: string) => {
     setSelectedEstate(estate);
-    setAlias("");
+    setDistrict("");
     setDoorWindowColor("");
     setCorrectEstate("");
     setNote("");
@@ -195,8 +195,8 @@ const Estates = () => {
               <Label>地區</Label>
               <Input
                 placeholder="例如：屯門、將軍澳..."
-                value={alias}
-                onChange={(e) => setAlias(e.target.value)}
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
                 加入後可用此地區名稱搜尋該屋苑
