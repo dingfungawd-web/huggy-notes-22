@@ -3,49 +3,16 @@ import { OrderRecord } from "./api";
 // ===== 標準尺寸定義 =====
 const STANDARD_SIZES = {
   門: { height: 2400, width: 1100 },
-  窗N: { height: 1600, width: 650 },  // 新式私樓（有露台）
-  窗O: { height: 1100, width: 650 },  // 舊式私樓/公屋/居屋
+  窗: { height: 1600, width: 650 },
 };
-
-// ===== 包裝備註解析 =====
-export interface ParsedNote {
-  estate: string;   // 屋苑名
-  block: string;    // 座數
-  unit: string;     // 室號
-  installDate: string; // 安裝日期 e.g. "0414" → "4月14日"
-  raw: string;
-}
-
-export function parsePackageNote(note: string): ParsedNote {
-  const raw = note || "";
-  // Extract estate name (before any digits/hyphens)
-  const estateMatch = raw.match(/^([^\d\-]+)/);
-  const estate = estateMatch ? estateMatch[1].trim() : raw;
-
-  // Try to extract block/unit/date from remaining
-  const remaining = raw.slice(estate.length).trim();
-  const parts = remaining.split(/[-\s]+/).filter(Boolean);
-
-  return {
-    estate,
-    block: parts[0] || "",
-    unit: parts[1] || "",
-    installDate: parts[parts.length - 1] || "",
-    raw,
-  };
-}
 
 // ===== 位置解析 =====
 export function parseLocation(loc: string): string {
   if (!loc) return "未知";
   const first = loc.charAt(0).toUpperCase();
-  const map: Record<string, string> = {
-    L: "客廳",
-    T: "廁所",
-    K: "廚房",
-    R: "房間",
-  };
-  return map[first] || loc;
+  const map: Record<string, string> = { L: "客廳", T: "廁所", K: "廚房", R: "房間" };
+  const label = map[first] || "";
+  return label ? `${loc}(${label})` : loc;
 }
 
 // ===== 款式簡化 =====
@@ -66,7 +33,7 @@ export function simplifyModel(model: string): string {
 export function classifyFabric(fabric: string): string {
   if (!fabric) return "標配玻纖網";
   const f = fabric.toLowerCase();
-  if (f.includes("pvc") || f.includes("寵物") || f.includes("防抓") || f.includes("防貓")) return "寵物網(PVC)";
+  if (f.includes("pvc") || f.includes("寵物") || f.includes("防抓") || f.includes("防貓")) return "寵物網";
   if (f.includes("48") || f.includes("4k") || f.includes("高清")) return "48目功能網";
   return "標配玻纖網";
 }
@@ -78,74 +45,26 @@ export function isSpecialColor(color: string): boolean {
   return SPECIAL_COLORS.some((sc) => color.includes(sc));
 }
 
-// ===== 超標尺寸分析 =====
-export interface SizeExceedance {
-  label: string;        // e.g. "超高20cm", "超高40cm"
+// ===== 超標記錄 =====
+export interface ExceedRecord {
+  位置: string;
+  寬: number;
+  高: number;
+  開向: string;
+  安裝: string;
+  超高: string; // e.g. "超20cm" or "-"
+  超闊: string;
+}
+
+// ===== 分佈 =====
+export interface Distribution {
+  label: string;
   count: number;
   percentage: number;
 }
 
-export interface SizeAnalysis {
-  total: number;
-  withinStandard: number;
-  withinStandardPct: number;
-  exceedHeight: SizeExceedance[];
-  exceedWidth: SizeExceedance[];
-}
-
-function analyzeSizeExceedance(
-  orders: OrderRecord[],
-  standardHeight: number,
-  standardWidth: number
-): SizeAnalysis {
-  const total = orders.length;
-  if (total === 0) return { total: 0, withinStandard: 0, withinStandardPct: 0, exceedHeight: [], exceedWidth: [] };
-
-  const heightBuckets = new Map<number, number>(); // increments of 20cm over
-  const widthBuckets = new Map<number, number>();
-  let withinStandard = 0;
-
-  for (const o of orders) {
-    const h = o["高(mm)"] || 0;
-    const w = o["寬(mm)"] || 0;
-    const overH = Math.max(0, h - standardHeight);
-    const overW = Math.max(0, w - standardWidth);
-
-    if (overH <= 0 && overW <= 0) {
-      withinStandard++;
-    }
-
-    if (overH > 0) {
-      const bucket = Math.ceil(overH / 200); // every 20cm = 200mm
-      heightBuckets.set(bucket, (heightBuckets.get(bucket) || 0) + 1);
-    }
-    if (overW > 0) {
-      const bucket = Math.ceil(overW / 200);
-      widthBuckets.set(bucket, (widthBuckets.get(bucket) || 0) + 1);
-    }
-  }
-
-  const toExceedance = (buckets: Map<number, number>, prefix: string): SizeExceedance[] =>
-    Array.from(buckets.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([bucket, count]) => ({
-        label: `${prefix}${bucket * 20}cm`,
-        count,
-        percentage: Math.round((count / total) * 100),
-      }));
-
-  return {
-    total,
-    withinStandard,
-    withinStandardPct: Math.round((withinStandard / total) * 100),
-    exceedHeight: toExceedance(heightBuckets, "超高"),
-    exceedWidth: toExceedance(widthBuckets, "超闊"),
-  };
-}
-
-// ===== 百分比分佈計算 =====
-export interface Distribution {
-  label: string;
+export interface BucketDistribution {
+  label: string; // e.g. "標準內", "超20cm", "超40cm"
   count: number;
   percentage: number;
 }
@@ -159,162 +78,134 @@ function getDistribution(items: string[]): Distribution[] {
     counts.set(key, (counts.get(key) || 0) + 1);
   }
   return Array.from(counts.entries())
-    .map(([label, count]) => ({
-      label,
-      count,
-      percentage: Math.round((count / total) * 100),
-    }))
+    .map(([label, count]) => ({ label, count, percentage: Math.round((count / total) * 100) }))
     .sort((a, b) => b.count - a.count);
 }
 
-// ===== 完整屋苑小檔案 =====
+function calcBuckets(values: number[], standard: number): BucketDistribution[] {
+  const total = values.length;
+  if (total === 0) return [];
+  const buckets = new Map<string, number>();
+  buckets.set("標準內", 0);
+
+  for (const v of values) {
+    const over = v - standard;
+    if (over <= 0) {
+      buckets.set("標準內", (buckets.get("標準內") || 0) + 1);
+    } else {
+      const steps = Math.ceil(over / 200); // per 20cm = 200mm
+      const label = `超${steps * 20}cm`;
+      buckets.set(label, (buckets.get(label) || 0) + 1);
+    }
+  }
+
+  return Array.from(buckets.entries())
+    .filter(([, count]) => count > 0)
+    .map(([label, count]) => ({ label, count, percentage: Math.round((count / total) * 100) }));
+}
+
+// ===== 門/窗分析結果 =====
+export interface TypeAnalysis {
+  total: number;
+  allWithinStandard: boolean;
+  exceedRecords: ExceedRecord[];
+  heightDistribution: BucketDistribution[];
+  widthDistribution: BucketDistribution[];
+}
+
+function analyzeType(orders: OrderRecord[], stdH: number, stdW: number): TypeAnalysis {
+  const total = orders.length;
+  if (total === 0) return { total: 0, allWithinStandard: true, exceedRecords: [], heightDistribution: [], widthDistribution: [] };
+
+  const exceedRecords: ExceedRecord[] = [];
+  for (const o of orders) {
+    const h = o["高(mm)"] || 0;
+    const w = o["寬(mm)"] || 0;
+    const overH = h - stdH;
+    const overW = w - stdW;
+    if (overH > 0 || overW > 0) {
+      exceedRecords.push({
+        位置: parseLocation(o.位置),
+        寬: w,
+        高: h,
+        開向: o["單拉/對拉"] || "",
+        安裝: o["內安/外安"] || "",
+        超高: overH > 0 ? `超${Math.ceil(overH / 200) * 20}cm` : "-",
+        超闊: overW > 0 ? `超${Math.ceil(overW / 200) * 20}cm` : "-",
+      });
+    }
+  }
+
+  const heights = orders.map((o) => o["高(mm)"] || 0);
+  const widths = orders.map((o) => o["寬(mm)"] || 0);
+  const heightDist = calcBuckets(heights, stdH);
+  const widthDist = calcBuckets(widths, stdW);
+
+  // Only show distributions if there are exceeds
+  const hasHeightExceed = heightDist.some((d) => d.label !== "標準內");
+  const hasWidthExceed = widthDist.some((d) => d.label !== "標準內");
+
+  return {
+    total,
+    allWithinStandard: exceedRecords.length === 0,
+    exceedRecords,
+    heightDistribution: hasHeightExceed ? heightDist : [],
+    widthDistribution: hasWidthExceed ? widthDist : [],
+  };
+}
+
+// ===== 屋苑小檔案 =====
 export interface EstateProfile {
   estateName: string;
   totalOrders: number;
+  customerCount: number;
 
-  // 門窗分類
-  doorAnalysis: SizeAnalysis;
-  windowAnalysis: SizeAnalysis;
+  doorAnalysis: TypeAnalysis;
+  windowAnalysis: TypeAnalysis;
 
-  // 款式分佈
-  modelDistribution: Distribution[];
-
-  // 框色分佈
   frameColorDistribution: Distribution[];
-  hasSpecialColors: boolean;
-  specialColorOrders: number;
-
-  // 網材分佈
   fabricDistribution: Distribution[];
-
-  // 單拉/對拉
   pullTypeDistribution: Distribution[];
-
-  // 內安/外安
   installTypeDistribution: Distribution[];
-
-  // 位置分佈
-  locationDistribution: Distribution[];
-
-  // 警告提醒
-  alerts: AlertItem[];
 }
 
-export interface AlertItem {
-  level: "red" | "yellow" | "green";
-  message: string;
+export function extractEstateName(note: string): string {
+  const match = (note || "").match(/^([^\d\-]+)/);
+  return match ? match[1].trim() : note;
 }
 
-export function generateEstateProfile(
-  estateName: string,
-  orders: OrderRecord[]
-): EstateProfile {
-  // Separate doors and windows
+export function generateEstateProfile(estateName: string, orders: OrderRecord[]): EstateProfile {
   const doors = orders.filter((o) => {
     const t = o["門/窗"] || "";
     return t.includes("門") || t.includes("门");
   });
-  const windows = orders.filter((o) => {
-    const t = o["門/窗"] || "";
-    return t.includes("窗");
-  });
+  const windows = orders.filter((o) => (o["門/窗"] || "").includes("窗"));
 
-  // Size analysis - use N standard for windows (1600mm height) as default
-  // This is conservative; O type (1100mm) would flag more
-  const doorAnalysis = analyzeSizeExceedance(doors, STANDARD_SIZES.門.height, STANDARD_SIZES.門.width);
-  const windowAnalysis = analyzeSizeExceedance(windows, STANDARD_SIZES.窗N.height, STANDARD_SIZES.窗N.width);
+  // Estimate customer count from unique address patterns (block+unit)
+  const uniqueAddresses = new Set(orders.map((o) => {
+    const note = o.包裝備註 || "";
+    // Remove estate name and date, keep block+unit
+    const afterEstate = note.replace(extractEstateName(note), "").trim();
+    return afterEstate.replace(/\d{4}$/, "").trim();
+  }));
+  const customerCount = Math.max(1, uniqueAddresses.size);
 
-  // Model distribution (simplified)
-  const modelDistribution = getDistribution(orders.map((o) => simplifyModel(o.款式)));
-
-  // Frame color distribution
-  const frameColorDistribution = getDistribution(orders.map((o) => o.框色 || "未知"));
-  const specialColorOrders = orders.filter((o) => isSpecialColor(o.框色)).length;
-
-  // Fabric distribution (classified)
-  const fabricDistribution = getDistribution(orders.map((o) => classifyFabric(o.網材)));
-
-  // Pull type
-  const pullTypeDistribution = getDistribution(orders.map((o) => o["單拉/對拉"] || "未知"));
-
-  // Install type
-  const installTypeDistribution = getDistribution(orders.map((o) => o["內安/外安"] || "未知"));
-
-  // Location
-  const locationDistribution = getDistribution(orders.map((o) => parseLocation(o.位置)));
-
-  // Generate alerts
-  const alerts: AlertItem[] = [];
-
-  // Door height alerts
-  if (doorAnalysis.exceedHeight.length > 0) {
-    const totalExceed = doorAnalysis.exceedHeight.reduce((s, e) => s + e.count, 0);
-    const pct = Math.round((totalExceed / Math.max(doorAnalysis.total, 1)) * 100);
-    alerts.push({
-      level: pct > 50 ? "red" : "yellow",
-      message: `⚠️ 門超高：${totalExceed}/${doorAnalysis.total} 項 (${pct}%) 超過標準 ${STANDARD_SIZES.門.height}mm`,
-    });
-  }
-
-  // Door width alerts
-  if (doorAnalysis.exceedWidth.length > 0) {
-    const totalExceed = doorAnalysis.exceedWidth.reduce((s, e) => s + e.count, 0);
-    const pct = Math.round((totalExceed / Math.max(doorAnalysis.total, 1)) * 100);
-    alerts.push({
-      level: pct > 50 ? "red" : "yellow",
-      message: `⚠️ 門超闊：${totalExceed}/${doorAnalysis.total} 項 (${pct}%) 超過標準 ${STANDARD_SIZES.門.width}mm`,
-    });
-  }
-
-  // Window height alerts
-  if (windowAnalysis.exceedHeight.length > 0) {
-    const totalExceed = windowAnalysis.exceedHeight.reduce((s, e) => s + e.count, 0);
-    const pct = Math.round((totalExceed / Math.max(windowAnalysis.total, 1)) * 100);
-    alerts.push({
-      level: pct > 50 ? "red" : "yellow",
-      message: `⚠️ 窗超高：${totalExceed}/${windowAnalysis.total} 項 (${pct}%) 超過標準 ${STANDARD_SIZES.窗N.height}mm`,
-    });
-  }
-
-  // Window width alerts
-  if (windowAnalysis.exceedWidth.length > 0) {
-    const totalExceed = windowAnalysis.exceedWidth.reduce((s, e) => s + e.count, 0);
-    const pct = Math.round((totalExceed / Math.max(windowAnalysis.total, 1)) * 100);
-    alerts.push({
-      level: pct > 50 ? "red" : "yellow",
-      message: `⚠️ 窗超闊：${totalExceed}/${windowAnalysis.total} 項 (${pct}%) 超過標準 ${STANDARD_SIZES.窗N.width}mm`,
-    });
-  }
-
-  // Special color alert
-  if (specialColorOrders > 0) {
-    alerts.push({
-      level: "yellow",
-      message: `🎨 特別瓷泳色：${specialColorOrders} 項需額外收費`,
-    });
-  }
-
-  // No alerts = green
-  if (alerts.length === 0) {
-    alerts.push({
-      level: "green",
-      message: "✅ 此屋苑歷史訂單均在標準範圍內",
-    });
-  }
+  const frameColorDist = getDistribution(orders.map((o) => o.框色 || "未知"));
+  // Add 標準色/特別色 classification info
+  const frameWithClass = frameColorDist.map((d) => ({
+    ...d,
+    isSpecial: isSpecialColor(d.label),
+  }));
 
   return {
     estateName,
     totalOrders: orders.length,
-    doorAnalysis,
-    windowAnalysis,
-    modelDistribution,
-    frameColorDistribution,
-    hasSpecialColors: specialColorOrders > 0,
-    specialColorOrders,
-    fabricDistribution,
-    pullTypeDistribution,
-    installTypeDistribution,
-    locationDistribution,
-    alerts,
+    customerCount,
+    doorAnalysis: analyzeType(doors, STANDARD_SIZES.門.height, STANDARD_SIZES.門.width),
+    windowAnalysis: analyzeType(windows, STANDARD_SIZES.窗.height, STANDARD_SIZES.窗.width),
+    frameColorDistribution: frameWithClass,
+    fabricDistribution: getDistribution(orders.map((o) => classifyFabric(o.網材))),
+    pullTypeDistribution: getDistribution(orders.map((o) => o["單拉/對拉"] || "未知")),
+    installTypeDistribution: getDistribution(orders.map((o) => o["內安/外安"] || "未知")),
   };
 }

@@ -1,9 +1,17 @@
 import { OrderRecord } from "@/lib/api";
-import { generateEstateProfile, type EstateProfile, type Distribution, type SizeAnalysis, type AlertItem } from "@/lib/orderAnalysis";
+import { generateEstateProfile, type TypeAnalysis, type Distribution, type BucketDistribution, type ExceedRecord, isSpecialColor } from "@/lib/orderAnalysis";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileDown, DoorOpen, Grid3X3, AlertTriangle, CheckCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { FileDown } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface EstateCardProps {
   estateName: string;
@@ -15,8 +23,7 @@ export function EstateCard({ estateName, orders, onExportPDF }: EstateCardProps)
   const profile = generateEstateProfile(estateName, orders);
 
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-lg">
-      {/* Header */}
+    <Card className="overflow-hidden">
       <CardHeader className="bg-primary/5 pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl">{estateName}</CardTitle>
@@ -26,127 +33,206 @@ export function EstateCard({ estateName, orders, onExportPDF }: EstateCardProps)
           </Button>
         </div>
         <p className="text-sm text-muted-foreground">
-          共 {profile.totalOrders} 項訂單紀錄
+          <strong>總訂貨數量：{profile.totalOrders}件</strong>（門：{profile.doorAnalysis.total}件 ｜ 窗：{profile.windowAnalysis.total}件）｜ 客戶數：{profile.customerCount}
         </p>
       </CardHeader>
 
-      <CardContent className="pt-4 space-y-5">
-        {/* Alerts */}
-        <AlertSection alerts={profile.alerts} />
-
-        {/* Door & Window Summary */}
-        <div className="grid grid-cols-2 gap-3">
-          <SizeCard label="門" icon={<DoorOpen className="h-4 w-4" />} analysis={profile.doorAnalysis} />
-          <SizeCard label="窗" icon={<Grid3X3 className="h-4 w-4" />} analysis={profile.windowAnalysis} />
-        </div>
-
-        {/* Size Exceedance Detail */}
-        {(profile.doorAnalysis.exceedHeight.length > 0 || profile.doorAnalysis.exceedWidth.length > 0 ||
-          profile.windowAnalysis.exceedHeight.length > 0 || profile.windowAnalysis.exceedWidth.length > 0) && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-foreground">超標尺寸分佈</h4>
-            {profile.doorAnalysis.total > 0 && <ExceedDetail label="門" analysis={profile.doorAnalysis} />}
-            {profile.windowAnalysis.total > 0 && <ExceedDetail label="窗" analysis={profile.windowAnalysis} />}
-          </div>
+      <CardContent className="pt-4 space-y-5 text-sm">
+        {/* 門 Section */}
+        {profile.doorAnalysis.total > 0 && (
+          <TypeSection label="門（回捲式）" analysis={profile.doorAnalysis} />
         )}
 
-        {/* Distributions */}
-        <div className="space-y-2">
-          <DistributionRow label="款式" items={profile.modelDistribution} />
-          <DistributionRow label="框色" items={profile.frameColorDistribution} />
-          <DistributionRow label="網材" items={profile.fabricDistribution} />
-          <DistributionRow label="拉式" items={profile.pullTypeDistribution} />
-          <DistributionRow label="安裝" items={profile.installTypeDistribution} />
+        {/* 窗 Section */}
+        {profile.windowAnalysis.total > 0 && (
+          <TypeSection label="窗（回捲式）" analysis={profile.windowAnalysis} />
+        )}
+
+        <Separator />
+
+        {/* 框色分佈 */}
+        <div>
+          <h4 className="font-semibold mb-2">框色分佈</h4>
+          <DistTable
+            items={profile.frameColorDistribution}
+            extraRow={(item) => (
+              <span className={isSpecialColor(item.label) ? "text-orange-600 font-medium" : "text-muted-foreground"}>
+                {isSpecialColor(item.label) ? "特別色 ⚠️" : "標準色"}
+              </span>
+            )}
+          />
+        </div>
+
+        {/* 網材分佈 */}
+        <div>
+          <h4 className="font-semibold mb-2">網材分佈</h4>
+          <DistTable items={profile.fabricDistribution} />
+        </div>
+
+        <Separator />
+
+        {/* 開向及安裝方式 */}
+        <div>
+          <h4 className="font-semibold mb-2">開向及安裝方式</h4>
+          <p>
+            <strong>開向：</strong>
+            {profile.pullTypeDistribution.map((d, i) => (
+              <span key={d.label}>
+                {i > 0 && " ｜ "}
+                {d.label} {d.count}件（{d.percentage}%）
+              </span>
+            ))}
+          </p>
+          <p>
+            <strong>安裝：</strong>
+            {profile.installTypeDistribution.map((d, i) => (
+              <span key={d.label}>
+                {i > 0 && " ｜ "}
+                {d.label} {d.count}件（{d.percentage}%）
+              </span>
+            ))}
+          </p>
+        </div>
+
+        <Separator />
+
+        {/* 備註 */}
+        <div>
+          <h4 className="font-semibold mb-1">備註</h4>
+          <p className="text-muted-foreground italic">（待度尺同事補充）</p>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function AlertSection({ alerts }: { alerts: AlertItem[] }) {
+// ===== Sub-components =====
+
+function TypeSection({ label, analysis }: { label: string; analysis: TypeAnalysis }) {
   return (
-    <div className="space-y-1.5">
-      {alerts.map((alert, i) => (
-        <div
-          key={i}
-          className={`flex items-start gap-2 rounded-lg px-3 py-2 text-sm ${
-            alert.level === "red"
-              ? "bg-destructive/10 text-destructive"
-              : alert.level === "yellow"
-              ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
-              : "bg-green-500/10 text-green-700 dark:text-green-400"
-          }`}
-        >
-          {alert.level === "green" ? (
-            <CheckCircle className="h-4 w-4 mt-0.5 shrink-0" />
-          ) : (
-            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+    <div className="space-y-3">
+      <h4 className="font-semibold text-base">{label}</h4>
+
+      {analysis.allWithinStandard ? (
+        <p className="text-green-700 dark:text-green-400 font-medium">尺寸：全部在標準範圍內 ✅</p>
+      ) : (
+        <>
+          <div>
+            <p className="font-medium mb-1.5">超標準尺寸記錄：</p>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="whitespace-nowrap">位置</TableHead>
+                    <TableHead className="whitespace-nowrap text-right">寬(mm)</TableHead>
+                    <TableHead className="whitespace-nowrap text-right">高(mm)</TableHead>
+                    <TableHead className="whitespace-nowrap">開向</TableHead>
+                    <TableHead className="whitespace-nowrap">內/外安</TableHead>
+                    <TableHead className="whitespace-nowrap">超高</TableHead>
+                    <TableHead className="whitespace-nowrap">超闊</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {analysis.exceedRecords.map((r, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{r.位置}</TableCell>
+                      <TableCell className="text-right tabular-nums">{r.寬}</TableCell>
+                      <TableCell className="text-right tabular-nums">{r.高}</TableCell>
+                      <TableCell>{r.開向}</TableCell>
+                      <TableCell>{r.安裝}</TableCell>
+                      <TableCell className={r.超高 !== "-" ? "text-orange-600 font-medium" : "text-muted-foreground"}>{r.超高}</TableCell>
+                      <TableCell className={r.超闊 !== "-" ? "text-orange-600 font-medium" : "text-muted-foreground"}>{r.超闊}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          {/* Height distribution */}
+          {analysis.heightDistribution.length > 0 && (
+            <BucketTable label="高度分佈" buckets={analysis.heightDistribution} />
           )}
-          <span>{alert.message}</span>
-        </div>
-      ))}
+
+          {/* Width distribution */}
+          {analysis.widthDistribution.length > 0 && (
+            <BucketTable label="闊度分佈" buckets={analysis.widthDistribution} />
+          )}
+        </>
+      )}
     </div>
   );
 }
 
-function SizeCard({ label, icon, analysis }: { label: string; icon: React.ReactNode; analysis: SizeAnalysis }) {
-  const exceedCount = analysis.total - analysis.withinStandard;
+function BucketTable({ label, buckets }: { label: string; buckets: BucketDistribution[] }) {
   return (
-    <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-muted-foreground">{icon}</span>
-        <span className="text-sm font-semibold">{label}</span>
-        <span className="text-lg font-bold ml-auto">{analysis.total}</span>
-      </div>
-      <div className="flex gap-2 text-xs">
-        <span className="text-green-600">✅ 標準內 {analysis.withinStandardPct}%</span>
-        {exceedCount > 0 && (
-          <span className="text-orange-600">⚠️ 超標 {Math.round((exceedCount / Math.max(analysis.total, 1)) * 100)}%</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ExceedDetail({ label, analysis }: { label: string; analysis: SizeAnalysis }) {
-  if (analysis.exceedHeight.length === 0 && analysis.exceedWidth.length === 0) return null;
-  return (
-    <div className="rounded-md border px-3 py-2">
-      <p className="text-xs font-medium text-muted-foreground mb-1.5">{label}</p>
-      <div className="flex flex-wrap gap-1.5">
-        <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50">
-          標準內 {analysis.withinStandardPct}% ({analysis.withinStandard})
-        </Badge>
-        {analysis.exceedHeight.map((e) => (
-          <Badge key={e.label} variant="outline" className="text-orange-700 border-orange-300 bg-orange-50">
-            {e.label} {e.percentage}% ({e.count})
-          </Badge>
-        ))}
-        {analysis.exceedWidth.map((e) => (
-          <Badge key={e.label} variant="outline" className="text-red-700 border-red-300 bg-red-50">
-            {e.label} {e.percentage}% ({e.count})
-          </Badge>
-        ))}
+    <div>
+      <p className="font-medium mb-1">{label}：</p>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-16"></TableHead>
+              {buckets.map((b) => (
+                <TableHead key={b.label} className="whitespace-nowrap text-center">{b.label}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">數量</TableCell>
+              {buckets.map((b) => (
+                <TableCell key={b.label} className="text-center tabular-nums">{b.count}</TableCell>
+              ))}
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">佔比</TableCell>
+              {buckets.map((b) => (
+                <TableCell key={b.label} className="text-center tabular-nums">{b.percentage}%</TableCell>
+              ))}
+            </TableRow>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
 }
 
-function DistributionRow({ label, items }: { label: string; items: Distribution[] }) {
-  if (items.length === 0) return null;
+function DistTable({ items, extraRow }: { items: Distribution[]; extraRow?: (item: Distribution) => React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2 text-sm">
-      <span className="text-muted-foreground shrink-0 w-10">{label}</span>
-      <div className="flex flex-wrap gap-1">
-        {items.map((item) => (
-          <span
-            key={item.label}
-            className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
-          >
-            {item.label} {item.percentage}%
-          </span>
-        ))}
-      </div>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/50">
+            <TableHead className="w-16"></TableHead>
+            {items.map((item) => (
+              <TableHead key={item.label} className="whitespace-nowrap text-center">{item.label}</TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell className="font-medium">數量</TableCell>
+            {items.map((item) => (
+              <TableCell key={item.label} className="text-center tabular-nums">{item.count}</TableCell>
+            ))}
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">佔比</TableCell>
+            {items.map((item) => (
+              <TableCell key={item.label} className="text-center tabular-nums">{item.percentage}%</TableCell>
+            ))}
+          </TableRow>
+          {extraRow && (
+            <TableRow>
+              <TableCell className="font-medium">分類</TableCell>
+              {items.map((item) => (
+                <TableCell key={item.label} className="text-center">{extraRow(item)}</TableCell>
+              ))}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }
