@@ -1,4 +1,4 @@
-import type { TypeAnalysis, BucketDistribution } from "@/lib/orderAnalysis";
+import type { TypeAnalysis } from "@/lib/orderAnalysis";
 import { PieChartSection } from "@/components/PieChartSection";
 import {
   Table,
@@ -25,6 +25,21 @@ export function ExceedTable({ label, analysis }: ExceedTableProps) {
         </p>
       ) : (
         <>
+          <div className="grid gap-4 sm:grid-cols-2 mb-3">
+            {analysis.heightDistribution.length > 0 && (
+              <PieChartSection
+                title="高度分佈"
+                data={analysis.heightDistribution.map(b => ({ label: b.label, count: b.count, percentage: b.percentage }))}
+              />
+            )}
+            {analysis.widthDistribution.length > 0 && (
+              <PieChartSection
+                title="闊度分佈"
+                data={analysis.widthDistribution.map(b => ({ label: b.label, count: b.count, percentage: b.percentage }))}
+              />
+            )}
+          </div>
+
           <div>
             <p className="font-medium mb-1.5">超標準尺寸記錄：</p>
             <div className="overflow-x-auto">
@@ -55,21 +70,6 @@ export function ExceedTable({ label, analysis }: ExceedTableProps) {
                 </TableBody>
               </Table>
             </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 mt-3">
-            {analysis.heightDistribution.length > 0 && (
-              <PieChartSection
-                title="高度分佈"
-                data={analysis.heightDistribution.map(b => ({ label: b.label, count: b.count, percentage: b.percentage }))}
-              />
-            )}
-            {analysis.widthDistribution.length > 0 && (
-              <PieChartSection
-                title="闊度分佈"
-                data={analysis.widthDistribution.map(b => ({ label: b.label, count: b.count, percentage: b.percentage }))}
-              />
-            )}
           </div>
         </>
       )}

@@ -65,7 +65,7 @@ export function PieChartSection({ title, data }: PieChartSectionProps) {
               <span className="truncate">{d.name}</span>
             </div>
             <span className="tabular-nums text-muted-foreground shrink-0 ml-2">
-              {d.percentage}%
+              {d.value}件　{d.percentage}%
             </span>
           </div>
         ))}
