@@ -59,16 +59,6 @@ export async function fetchOrders(search?: string, signal?: AbortSignal): Promis
   }
 
   return allRows.map(mapRowToOrder);
-
-  if (signal?.aborted) {
-    throw new DOMException("Aborted", "AbortError");
-  }
-
-  if (error) {
-    throw new Error(`查詢失敗: ${error.message}`);
-  }
-
-  return (data || []).map(mapRowToOrder);
 }
 
 export function groupByEstate(orders: OrderRecord[]): Map<string, OrderRecord[]> {
