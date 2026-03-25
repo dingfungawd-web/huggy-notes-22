@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAliasMap, type AliasMapping } from "@/lib/estateMetaApi";
 
 export interface OrderRecord {
   包裝備註: string;
@@ -31,37 +32,55 @@ function mapRowToOrder(row: Record<string, unknown>): OrderRecord {
   };
 }
 
-// Look up aliases: given a search term, find additional terms to search for
-async function getExpandedSearchTerms(term: string): Promise<string[]> {
-  const terms = [term];
-  const lowerTerm = term.toLowerCase();
+// Cache alias map from Google Sheets (異常屋苑名稱正確歸類)
+let aliasCache: { data: AliasMapping[] | null; fetchedAt: number } = {
+  data: null,
+  fetchedAt: 0,
+};
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-  // 1. Check if search term matches any alias → get canonical name
-  const { data: aliasHits } = await supabase
-    .from("estate_aliases")
-    .select("canonical_name")
-    .ilike("alias_name", `%${lowerTerm}%`);
+async function getCachedAliasMap(): Promise<AliasMapping[]> {
+  if (aliasCache.data && Date.now() - aliasCache.fetchedAt < CACHE_TTL) {
+    return aliasCache.data;
+  }
+  try {
+    const data = await fetchAliasMap();
+    aliasCache = { data, fetchedAt: Date.now() };
+    return data;
+  } catch {
+    return aliasCache.data || [];
+  }
+}
 
-  if (aliasHits && aliasHits.length > 0) {
-    for (const hit of aliasHits) {
-      const canon = (hit.canonical_name as string).replace(/\s/g, "");
-      if (!terms.some((t) => t.toLowerCase() === canon.toLowerCase())) {
-        terms.push(canon);
+// Expand search terms using 異常屋苑名稱正確歸類 from Google Sheets
+async function getExpandedSearchTerms(normalizedTerm: string): Promise<string[]> {
+  const terms = [normalizedTerm];
+
+  const aliasMap = await getCachedAliasMap();
+
+  for (const { estateName, correctClassification } of aliasMap) {
+    if (!correctClassification) continue;
+
+    const normEstate = estateName.toLowerCase().replace(/\s/g, "");
+    const normClassification = correctClassification.toLowerCase().replace(/\s/g, "");
+
+    // Search matches the correct classification → also search the estate name
+    if (
+      normClassification.includes(normalizedTerm) ||
+      normalizedTerm.includes(normClassification)
+    ) {
+      if (!terms.includes(normEstate)) {
+        terms.push(normEstate);
       }
     }
-  }
 
-  // 2. Check if search term IS a canonical name → get all aliases
-  const { data: reverseHits } = await supabase
-    .from("estate_aliases")
-    .select("alias_name")
-    .ilike("canonical_name", `%${lowerTerm}%`);
-
-  if (reverseHits && reverseHits.length > 0) {
-    for (const hit of reverseHits) {
-      const alias = (hit.alias_name as string).replace(/\s/g, "");
-      if (!terms.some((t) => t.toLowerCase() === alias.toLowerCase())) {
-        terms.push(alias);
+    // Search matches the estate name → also search the correct classification
+    if (
+      normEstate.includes(normalizedTerm) ||
+      normalizedTerm.includes(normEstate)
+    ) {
+      if (!terms.includes(normClassification)) {
+        terms.push(normClassification);
       }
     }
   }
@@ -74,9 +93,9 @@ export async function fetchOrders(search?: string, signal?: AbortSignal): Promis
     return [];
   }
 
-  const baseTerm = search.replace(/\s/g, "");
+  const baseTerm = search.replace(/\s/g, "").toLowerCase();
 
-  // Expand search with aliases
+  // Expand search with 異常屋苑名稱正確歸類
   const searchTerms = await getExpandedSearchTerms(baseTerm);
 
   // Build OR filter for all terms

@@ -43,6 +43,20 @@ export async function fetchEstateMeta(estateName: string, signal?: AbortSignal):
   return raw.map(normalizeMetaRecord);
 }
 
+export interface AliasMapping {
+  estateName: string;
+  correctClassification: string;
+}
+
+// Fetch all estates that have 異常屋苑名稱正確歸類 set (for search expansion)
+export async function fetchAliasMap(): Promise<AliasMapping[]> {
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.set("action", "getAliasMap");
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error("無法取得歸類對照表");
+  return res.json();
+}
+
 export async function postEstateMeta(data: {
   estateName: string;
   district?: string;
