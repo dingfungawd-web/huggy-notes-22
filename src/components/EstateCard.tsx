@@ -28,8 +28,10 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
 
   const { data: metaRecords } = useQuery({
     queryKey: ["estateMeta", estateName],
-    queryFn: () => fetchEstateMeta(estateName),
+    queryFn: ({ signal }) => fetchEstateMeta(estateName, signal),
     enabled: !hideMeta,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const districts = hideMeta ? [] : (metaRecords?.filter((m) => m.地區).map((m) => m.地區) || []);

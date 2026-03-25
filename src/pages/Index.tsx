@@ -21,19 +21,23 @@ const Index = () => {
     const trimmed = searchTerm.trim();
     const timer = setTimeout(() => {
       setSubmittedSearch(trimmed);
-      if (trimmed !== submittedSearch) {
-        setShowCombined(false);
-      }
-    }, 300);
+    }, 200);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const searchLower = submittedSearch.toLowerCase();
+  useEffect(() => {
+    setShowCombined(false);
+  }, [submittedSearch]);
+
+  const normalizedSearch = submittedSearch.toLowerCase().replace(/\s/g, "");
 
   const { data: orders, isLoading, isError } = useQuery({
-    queryKey: ["orders", searchLower],
-    queryFn: () => fetchOrders(submittedSearch || undefined),
-    enabled: submittedSearch.length > 0,
+    queryKey: ["orders", normalizedSearch],
+    queryFn: ({ signal }) => fetchOrders(submittedSearch || undefined, signal),
+    enabled: normalizedSearch.length > 0,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData,
   });
 
   const grouped = orders ? groupByEstate(orders) : new Map<string, OrderRecord[]>();
