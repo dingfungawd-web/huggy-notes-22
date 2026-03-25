@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { Search, Loader2, Building2, AlertCircle, LayoutGrid, BarChart3 } from "lucide-react";
