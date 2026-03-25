@@ -20,19 +20,21 @@ import {
 interface EstateCardProps {
   estateName: string;
   orders: OrderRecord[];
+  hideMeta?: boolean;
 }
 
-export function EstateCard({ estateName, orders }: EstateCardProps) {
+export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardProps) {
   const profile = generateEstateProfile(estateName, orders);
 
   const { data: metaRecords } = useQuery({
     queryKey: ["estateMeta", estateName],
     queryFn: () => fetchEstateMeta(estateName),
+    enabled: !hideMeta,
   });
 
-  const aliases = metaRecords?.filter((m) => m.別名).map((m) => m.別名) || [];
-  const colors = metaRecords?.filter((m) => m.門窗顏色).map((m) => m.門窗顏色) || [];
-  const notes = metaRecords?.filter((m) => m.備註).map((m) => m.備註) || [];
+  const aliases = hideMeta ? [] : (metaRecords?.filter((m) => m.別名).map((m) => m.別名) || []);
+  const colors = hideMeta ? [] : (metaRecords?.filter((m) => m.門窗顏色).map((m) => m.門窗顏色) || []);
+  const notes = hideMeta ? [] : (metaRecords?.filter((m) => m.備註).map((m) => m.備註) || []);
 
   return (
     <Card className="overflow-hidden">
