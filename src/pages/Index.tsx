@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
-import { Search, Loader2, Building2, AlertCircle, LayoutGrid } from "lucide-react";
+import { Search, Loader2, Building2, AlertCircle, LayoutGrid, BarChart3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ const Index = () => {
   const initialSearch = urlParams.get("search") || "";
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
+  const [showCombined, setShowCombined] = useState(false);
 
   const searchLower = submittedSearch.toLowerCase();
 
@@ -28,6 +29,7 @@ const Index = () => {
   const handleSearch = () => {
     if (searchTerm.trim()) {
       setSubmittedSearch(searchTerm.trim());
+      setShowCombined(false);
     }
   };
 
@@ -102,17 +104,36 @@ const Index = () => {
               </div>
             ) : (
               <>
-                {/* Estate quick-nav */}
+                {/* Quick-nav with combined view toggle */}
                 {grouped.size > 1 && (
                   <div className="mb-6 flex flex-wrap gap-2">
+                    <Button
+                      variant={showCombined ? "default" : "outline"}
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setShowCombined(!showCombined)}
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      全部屋苑總數據
+                      <Badge variant={showCombined ? "outline" : "secondary"} className="ml-1 text-xs">
+                        {grouped.size}個
+                      </Badge>
+                    </Button>
                     {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
                       <Button
                         key={estate}
-                        variant="outline"
+                        variant={showCombined ? "ghost" : "outline"}
                         size="sm"
                         className="gap-1.5"
                         onClick={() => {
-                          document.getElementById(`estate-${estate}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          if (showCombined) {
+                            setShowCombined(false);
+                            setTimeout(() => {
+                              document.getElementById(`estate-${estate}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }, 100);
+                          } else {
+                            document.getElementById(`estate-${estate}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }
                         }}
                       >
                         {estate}
@@ -122,21 +143,35 @@ const Index = () => {
                   </div>
                 )}
 
-                {/* Aggregated meta summary */}
-                {grouped.size > 1 && (
-                  <EstateMetaSummary estateNames={Array.from(grouped.keys())} />
-                )}
+                {/* Combined view: all estates merged */}
+                {showCombined && grouped.size > 1 ? (
+                  <>
+                    <EstateMetaSummary estateNames={Array.from(grouped.keys())} />
+                    <EstateCard
+                      estateName={`全部屋苑合計（${grouped.size}個）`}
+                      orders={orders}
+                      hideMeta
+                    />
+                  </>
+                ) : (
+                  <>
+                    {/* Aggregated meta summary */}
+                    {grouped.size > 1 && (
+                      <EstateMetaSummary estateNames={Array.from(grouped.keys())} />
+                    )}
 
-                <div className="grid gap-6">
-                  {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
-                    <div key={estate} id={`estate-${estate}`} className="scroll-mt-24">
-                      <EstateCard
-                        estateName={estate}
-                        orders={estateOrders}
-                      />
+                    <div className="grid gap-6">
+                      {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
+                        <div key={estate} id={`estate-${estate}`} className="scroll-mt-24">
+                          <EstateCard
+                            estateName={estate}
+                            orders={estateOrders}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </>
             )}
           </>
