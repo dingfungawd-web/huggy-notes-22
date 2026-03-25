@@ -50,47 +50,49 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
       <CardContent className="pt-4 space-y-5 text-sm">
         {/* Meta info from web input */}
         {(districts.length > 0 || colors.length > 0 || correctEstates.length > 0 || notes.length > 0) && (
-          <div className="space-y-2">
+          <div className="space-y-3 text-base">
             {districts.length > 0 && (
               <div className="flex items-start gap-2">
-                <Tag className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <Tag className="h-5 w-5 text-foreground mt-0.5 shrink-0" />
                 <div>
-                  <span className="font-medium">地區：</span>
+                  <span className="font-bold">地區：</span>
                   {districts.map((a, i) => (
-                    <Badge key={i} variant="outline" className="mr-1 mb-1">{a}</Badge>
+                    <span key={i} className="font-bold text-foreground mr-2">{a}</span>
                   ))}
                 </div>
               </div>
             )}
             {colors.length > 0 && (
               <div className="flex items-start gap-2">
-                <Palette className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <Palette className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
                 <div>
-                  <span className="font-medium">門窗顏色：</span>
+                  <span className="font-bold text-green-600">門窗顏色：</span>
                   {colors.map((c, i) => (
-                    <Badge key={i} variant="secondary" className="mr-1 mb-1">{c}</Badge>
+                    <span key={i} className="font-bold text-green-600 mr-2">{c}</span>
                   ))}
                 </div>
               </div>
             )}
             {correctEstates.length > 0 && (
               <div className="flex items-start gap-2">
-                <Link2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <Link2 className="h-5 w-5 text-foreground mt-0.5 shrink-0" />
                 <div>
-                  <span className="font-medium">正確歸類至：</span>
+                  <span className="font-bold">正確歸類至：</span>
                   {correctEstates.map((c, i) => (
-                    <Badge key={i} variant="outline" className="mr-1 mb-1 border-primary/30">{c}</Badge>
+                    <span key={i} className="font-bold text-foreground mr-2">{c}</span>
                   ))}
                 </div>
               </div>
             )}
             {notes.length > 0 && (
               <div className="flex items-start gap-2">
-                <MessageSquare className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <MessageSquare className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                 <div className="space-y-1">
-                  <span className="font-medium">備註：</span>
+                  <span className="font-bold text-red-600">備註：</span>
                   {notes.map((n, i) => (
-                    <p key={i} className="text-muted-foreground">{n}</p>
+                    <p key={i} className="font-bold text-red-600">
+                      <span className="text-red-600 mr-1">❗</span>{n}
+                    </p>
                   ))}
                 </div>
               </div>
