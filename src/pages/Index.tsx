@@ -4,9 +4,9 @@ import { useSearchParams, Link } from "react-router-dom";
 import { Search, Loader2, Building2, AlertCircle, LayoutGrid } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { fetchOrders, groupByEstate, type OrderRecord } from "@/lib/api";
 import { EstateCard } from "@/components/EstateCard";
-import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const [urlParams] = useSearchParams();
