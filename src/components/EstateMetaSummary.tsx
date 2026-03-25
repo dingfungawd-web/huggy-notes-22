@@ -12,7 +12,9 @@ export function EstateMetaSummary({ estateNames }: EstateMetaSummaryProps) {
   const queries = useQueries({
     queries: estateNames.map((name) => ({
       queryKey: ["estateMeta", name],
-      queryFn: () => fetchEstateMeta(name),
+      queryFn: ({ signal }) => fetchEstateMeta(name, signal),
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
     })),
   });
 

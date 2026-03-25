@@ -14,13 +14,13 @@ export interface OrderRecord {
   "四框/三框": string;
 }
 
-export async function fetchOrders(search?: string): Promise<OrderRecord[]> {
+export async function fetchOrders(search?: string, signal?: AbortSignal): Promise<OrderRecord[]> {
   const url = new URL(APPS_SCRIPT_URL);
   if (search) {
     // Strip spaces so "park yoho" and "parkyoho" produce the same query
     url.searchParams.set("search", search.replace(/\s/g, ""));
   }
-  const response = await fetch(url.toString());
+  const response = await fetch(url.toString(), { signal });
   if (!response.ok) {
     throw new Error("無法取得資料");
   }

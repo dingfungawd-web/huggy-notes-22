@@ -33,11 +33,11 @@ export async function fetchAllEstates(): Promise<string[]> {
   return res.json();
 }
 
-export async function fetchEstateMeta(estateName: string): Promise<EstateMeta[]> {
+export async function fetchEstateMeta(estateName: string, signal?: AbortSignal): Promise<EstateMeta[]> {
   const url = new URL(APPS_SCRIPT_URL);
   url.searchParams.set("action", "getEstateMeta");
   url.searchParams.set("estate", estateName);
-  const res = await fetch(url.toString());
+  const res = await fetch(url.toString(), { signal });
   if (!res.ok) throw new Error("無法取得屋苑備註");
   const raw: RawMetaRecord[] = await res.json();
   return raw.map(normalizeMetaRecord);
