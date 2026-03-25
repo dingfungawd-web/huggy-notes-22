@@ -95,11 +95,31 @@ export async function fetchOrders(search?: string, signal?: AbortSignal): Promis
 
   const baseTerm = search.replace(/\s/g, "").toLowerCase();
 
-  // Expand search with 異常屋苑名稱正確歸類
-  const searchTerms = await getExpandedSearchTerms(baseTerm);
-
   // Use database function that strips spaces from both sides during comparison
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+  // Special case: "*" means fetch all orders (used by Estates page)
+  if (search === "*") {
+    const allRows: Record<string, unknown>[] = [];
+    const pageSize = 1000;
+    let from = 0;
+    let keepGoing = true;
+    while (keepGoing) {
+      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+      const { data, error } = await supabase
+        .from("orders")
+        .select("package_note, model, door_window, frame_color, fabric_color, location, width_mm, height_mm, pull_type, install_type, frame_type")
+        .range(from, from + pageSize - 1);
+      if (error) throw new Error(`查詢失敗: ${error.message}`);
+      if (data) allRows.push(...data);
+      keepGoing = (data?.length ?? 0) === pageSize;
+      from += pageSize;
+    }
+    return allRows.map(mapRowToOrder);
+  }
+
+  // Expand search with 異常屋苑名稱正確歸類
+  const searchTerms = await getExpandedSearchTerms(baseTerm);
 
   const { data, error } = await supabase.rpc("search_orders_by_terms", {
     search_terms: searchTerms,
