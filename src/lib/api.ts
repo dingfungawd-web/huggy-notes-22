@@ -98,42 +98,15 @@ export async function fetchOrders(search?: string, signal?: AbortSignal): Promis
   // Expand search with 異常屋苑名稱正確歸類
   const searchTerms = await getExpandedSearchTerms(baseTerm);
 
-  // Build OR filter for all terms – include both space-stripped AND original forms
-  const patterns = new Set<string>();
-  for (const t of searchTerms) {
-    patterns.add(t); // space-stripped version
-  }
-  // Also add the original search term (lowercased, spaces preserved) so that
-  // e.g. "Park YOHO" matches package_notes containing "Park YOHO" with spaces.
-  const originalLower = search.trim().toLowerCase();
-  if (originalLower && !patterns.has(originalLower)) {
-    patterns.add(originalLower);
-  }
+  // Use database function that strips spaces from both sides during comparison
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-  const orFilter = Array.from(patterns)
-    .map((t) => `package_note.ilike.%${t}%`)
-    .join(",");
+  const { data, error } = await supabase.rpc("search_orders_by_terms", {
+    search_terms: searchTerms,
+  });
 
-  // Fetch all matching rows (bypass 1000-row default limit)
-  const allRows: Record<string, unknown>[] = [];
-  const pageSize = 1000;
-  let from = 0;
-  let keepGoing = true;
-
-  while (keepGoing) {
-    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-
-    const { data, error } = await supabase
-      .from("orders")
-      .select("package_note, model, door_window, frame_color, fabric_color, location, width_mm, height_mm, pull_type, install_type, frame_type")
-      .or(orFilter)
-      .range(from, from + pageSize - 1);
-
-    if (error) throw new Error(`查詢失敗: ${error.message}`);
-    if (data) allRows.push(...data);
-    keepGoing = (data?.length ?? 0) === pageSize;
-    from += pageSize;
-  }
+  if (error) throw new Error(`查詢失敗: ${error.message}`);
+  const allRows = (data || []) as Record<string, unknown>[];
 
   return allRows.map(mapRowToOrder);
 }
