@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { fetchOrders, groupByEstate, type OrderRecord } from "@/lib/api";
+import { fetchOrders, groupByEstate, stripSpaces, type OrderRecord } from "@/lib/api";
 import { postEstateMeta } from "@/lib/estateMetaApi";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
@@ -40,7 +40,7 @@ const Estates = () => {
     .sort((a, b) => b.count - a.count);
 
   const filtered = filter.trim()
-    ? estateList.filter((e) => e.name.toLowerCase().includes(filter.toLowerCase()))
+    ? estateList.filter((e) => stripSpaces(e.name).toLowerCase().includes(stripSpaces(filter).toLowerCase()))
     : estateList;
 
   const mutation = useMutation({
