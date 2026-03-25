@@ -13,8 +13,10 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
 
+  const searchLower = submittedSearch.toLowerCase();
+
   const { data: orders, isLoading, isError } = useQuery({
-    queryKey: ["orders", submittedSearch],
+    queryKey: ["orders", searchLower],
     queryFn: () => fetchOrders(submittedSearch || undefined),
     enabled: submittedSearch.length > 0,
   });
