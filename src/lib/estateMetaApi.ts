@@ -16,7 +16,7 @@ interface RawMetaRecord {
 function normalizeMetaRecord(raw: RawMetaRecord): EstateMeta {
   return {
     屋苑名稱: raw["屋苑名稱"] || raw["estate"] || "",
-    別名: raw["別名"] || raw["type"] || "",
+    別名: raw["別名"] || raw["地區"] || raw["type"] || "",
     門窗顏色: raw["門窗顏色"] || raw["value"] || "",
     備註: raw["備註"] || raw["timestamp"] || "",
     建立時間: raw["建立時間"] || raw["created"] || "",
