@@ -122,6 +122,11 @@ const Index = () => {
                   </div>
                 )}
 
+                {/* Aggregated meta summary */}
+                {grouped.size > 1 && (
+                  <EstateMetaSummary estateNames={Array.from(grouped.keys())} />
+                )}
+
                 <div className="grid gap-6">
                   {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
                     <div key={estate} id={`estate-${estate}`} className="scroll-mt-24">
