@@ -2,7 +2,7 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8yTdoO6X-QOBE
 
 export interface EstateMeta {
   屋苑名稱: string;
-  別名: string;
+  地區: string;
   門窗顏色: string;
   異常屋苑名稱正確歸類: string;
   備註: string;
@@ -17,7 +17,7 @@ interface RawMetaRecord {
 function normalizeMetaRecord(raw: RawMetaRecord): EstateMeta {
   return {
     屋苑名稱: raw["屋苑名稱"] || raw["estate"] || "",
-    別名: raw["別名"] || raw["地區"] || raw["type"] || "",
+    地區: raw["地區"] || raw["別名"] || raw["type"] || "",
     門窗顏色: raw["門窗顏色"] || raw["value"] || "",
     異常屋苑名稱正確歸類: raw["異常屋苑名稱正確歸類"] || raw["correctEstate"] || "",
     備註: raw["備註"] || raw["timestamp"] || "",
