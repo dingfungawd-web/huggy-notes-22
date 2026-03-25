@@ -39,41 +39,42 @@ export function EstateMetaSummary({ estateNames }: EstateMetaSummaryProps) {
       <CardHeader className="pb-2">
         <CardTitle className="text-base">搜尋結果補充資料總覽</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
+      <CardContent className="space-y-3 text-base">
         {allDistricts.length > 0 && (
           <div className="flex items-start gap-2">
-            <Tag className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <Tag className="h-5 w-5 text-foreground mt-0.5 shrink-0" />
             <div>
-              <span className="font-medium">地區：</span>
+              <span className="font-bold">地區：</span>
               {allDistricts.map((d, i) => (
-                <Badge key={i} variant="outline" className="mr-1 mb-1">
+                <span key={i} className="font-bold text-foreground mr-2">
                   {d.estate}：{d.value}
-                </Badge>
+                </span>
               ))}
             </div>
           </div>
         )}
         {allColors.length > 0 && (
           <div className="flex items-start gap-2">
-            <Palette className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <Palette className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
             <div>
-              <span className="font-medium">門窗顏色：</span>
+              <span className="font-bold text-green-600">門窗顏色：</span>
               {allColors.map((c, i) => (
-                <Badge key={i} variant="secondary" className="mr-1 mb-1">
+                <span key={i} className="font-bold text-green-600 mr-2">
                   {c.estate}：{c.value}
-                </Badge>
+                </span>
               ))}
             </div>
           </div>
         )}
         {allNotes.length > 0 && (
           <div className="flex items-start gap-2">
-            <MessageSquare className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <MessageSquare className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
             <div className="space-y-1">
-              <span className="font-medium">備註：</span>
+              <span className="font-bold text-red-600">備註：</span>
               {allNotes.map((n, i) => (
-                <p key={i} className="text-muted-foreground">
-                  <span className="font-medium text-foreground">{n.estate}：</span>{n.value}
+                <p key={i} className="font-bold text-red-600">
+                  <span className="text-red-600 mr-1">❗</span>
+                  <span className="font-bold text-foreground">{n.estate}：</span>{n.value}
                 </p>
               ))}
             </div>
