@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { PieChartSection } from "@/components/PieChartSection";
 import { ExceedTable } from "@/components/ExceedTable";
-import { Info, Tag, Palette, MessageSquare } from "lucide-react";
+import { Info, Tag, Palette, MessageSquare, Link2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -34,6 +34,7 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
 
   const aliases = hideMeta ? [] : (metaRecords?.filter((m) => m.別名).map((m) => m.別名) || []);
   const colors = hideMeta ? [] : (metaRecords?.filter((m) => m.門窗顏色).map((m) => m.門窗顏色) || []);
+  const correctEstates = hideMeta ? [] : (metaRecords?.filter((m) => m.異常屋苑名稱正確歸類).map((m) => m.異常屋苑名稱正確歸類) || []);
   const notes = hideMeta ? [] : (metaRecords?.filter((m) => m.備註).map((m) => m.備註) || []);
 
   return (
@@ -48,7 +49,7 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
 
       <CardContent className="pt-4 space-y-5 text-sm">
         {/* Meta info from web input */}
-        {(aliases.length > 0 || colors.length > 0 || notes.length > 0) && (
+        {(aliases.length > 0 || colors.length > 0 || correctEstates.length > 0 || notes.length > 0) && (
           <div className="space-y-2">
             {aliases.length > 0 && (
               <div className="flex items-start gap-2">
@@ -72,6 +73,17 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
                 </div>
               </div>
             )}
+            {correctEstates.length > 0 && (
+              <div className="flex items-start gap-2">
+                <Link2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-medium">正確歸類至：</span>
+                  {correctEstates.map((c, i) => (
+                    <Badge key={i} variant="outline" className="mr-1 mb-1 border-primary/30">{c}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
             {notes.length > 0 && (
               <div className="flex items-start gap-2">
                 <MessageSquare className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -86,7 +98,7 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
           </div>
         )}
 
-        {(aliases.length > 0 || colors.length > 0 || notes.length > 0) && <Separator />}
+        {(aliases.length > 0 || colors.length > 0 || correctEstates.length > 0 || notes.length > 0) && <Separator />}
 
         {/* ===== Section 2: 圓形圖分佈 ===== */}
         <div>
