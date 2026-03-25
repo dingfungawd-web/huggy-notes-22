@@ -32,22 +32,33 @@ function mapRowToOrder(row: Record<string, unknown>): OrderRecord {
 }
 
 export async function fetchOrders(search?: string, signal?: AbortSignal): Promise<OrderRecord[]> {
-  let query = supabase.from("orders").select("package_note, model, door_window, frame_color, fabric_color, location, width_mm, height_mm, pull_type, install_type, frame_type");
-
-  if (search) {
-    const term = search.replace(/\s/g, "");
-    // Search in package_note which contains the estate/building info
-    query = query.ilike("package_note", `%${term}%`);
+  if (!search) {
+    return [];
   }
 
-  // Handle abort signal
-  if (signal) {
-    signal.addEventListener("abort", () => {
-      // supabase-js doesn't natively support abort, but we can still throw
-    });
+  const term = search.replace(/\s/g, "");
+  // Fetch all matching rows (bypass 1000-row default limit)
+  const allRows: Record<string, unknown>[] = [];
+  const pageSize = 1000;
+  let from = 0;
+  let keepGoing = true;
+
+  while (keepGoing) {
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("package_note, model, door_window, frame_color, fabric_color, location, width_mm, height_mm, pull_type, install_type, frame_type")
+      .ilike("package_note", `%${term}%`)
+      .range(from, from + pageSize - 1);
+
+    if (error) throw new Error(`查詢失敗: ${error.message}`);
+    if (data) allRows.push(...data);
+    keepGoing = (data?.length ?? 0) === pageSize;
+    from += pageSize;
   }
 
-  const { data, error } = await query;
+  return allRows.map(mapRowToOrder);
 
   if (signal?.aborted) {
     throw new DOMException("Aborted", "AbortError");
