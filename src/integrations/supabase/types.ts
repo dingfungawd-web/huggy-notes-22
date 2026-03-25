@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      estate_aliases: {
+        Row: {
+          alias_name: string
+          canonical_name: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          alias_name: string
+          canonical_name: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          alias_name?: string
+          canonical_name?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
