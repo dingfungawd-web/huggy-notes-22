@@ -141,16 +141,12 @@ function analyzeType(orders: OrderRecord[], stdH: number, stdW: number): TypeAna
   const heightDist = calcBuckets(heights, stdH);
   const widthDist = calcBuckets(widths, stdW);
 
-  // Only show distributions if there are exceeds
-  const hasHeightExceed = heightDist.some((d) => d.label !== "標準內");
-  const hasWidthExceed = widthDist.some((d) => d.label !== "標準內");
-
   return {
     total,
     allWithinStandard: exceedRecords.length === 0,
     exceedRecords,
-    heightDistribution: hasHeightExceed ? heightDist : [],
-    widthDistribution: hasWidthExceed ? widthDist : [],
+    heightDistribution: heightDist,
+    widthDistribution: widthDist,
   };
 }
 
