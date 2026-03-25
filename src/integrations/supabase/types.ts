@@ -109,7 +109,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_orders_by_terms: {
+        Args: { search_terms: string[] }
+        Returns: {
+          door_window: string
+          fabric_color: string
+          frame_color: string
+          frame_type: string
+          height_mm: number
+          install_type: string
+          location: string
+          model: string
+          package_note: string
+          pull_type: string
+          width_mm: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
