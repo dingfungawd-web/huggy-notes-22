@@ -40,7 +40,9 @@ const Estates = () => {
     .sort((a, b) => b.count - a.count);
 
   const filtered = filter.trim()
-    ? estateList.filter((e) => e.name.toLowerCase().includes(filter.toLowerCase()))
+    ? estateList.filter((e) =>
+        e.name.toLowerCase().replace(/\s/g, "").includes(filter.toLowerCase().replace(/\s/g, ""))
+      )
     : estateList;
 
   const mutation = useMutation({
