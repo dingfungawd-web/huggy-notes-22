@@ -57,48 +57,22 @@ export function ExceedTable({ label, analysis }: ExceedTableProps) {
             </div>
           </div>
 
-          {analysis.heightDistribution.length > 0 && (
-            <BucketTable label="高度分佈" buckets={analysis.heightDistribution} />
-          )}
-          {analysis.widthDistribution.length > 0 && (
-            <BucketTable label="闊度分佈" buckets={analysis.widthDistribution} />
-          )}
+          <div className="grid gap-4 sm:grid-cols-2 mt-3">
+            {analysis.heightDistribution.length > 0 && (
+              <PieChartSection
+                title="高度分佈"
+                data={analysis.heightDistribution.map(b => ({ label: b.label, count: b.count, percentage: b.percentage }))}
+              />
+            )}
+            {analysis.widthDistribution.length > 0 && (
+              <PieChartSection
+                title="闊度分佈"
+                data={analysis.widthDistribution.map(b => ({ label: b.label, count: b.count, percentage: b.percentage }))}
+              />
+            )}
+          </div>
         </>
       )}
-    </div>
-  );
-}
-
-function BucketTable({ label, buckets }: { label: string; buckets: BucketDistribution[] }) {
-  return (
-    <div>
-      <p className="font-medium mb-1">{label}：</p>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-16"></TableHead>
-              {buckets.map((b) => (
-                <TableHead key={b.label} className="whitespace-nowrap text-center">{b.label}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell className="font-medium">數量</TableCell>
-              {buckets.map((b) => (
-                <TableCell key={b.label} className="text-center tabular-nums">{b.count}</TableCell>
-              ))}
-            </TableRow>
-            <TableRow>
-              <TableCell className="font-medium">佔比</TableCell>
-              {buckets.map((b) => (
-                <TableCell key={b.label} className="text-center tabular-nums">{b.percentage}%</TableCell>
-              ))}
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
     </div>
   );
 }
