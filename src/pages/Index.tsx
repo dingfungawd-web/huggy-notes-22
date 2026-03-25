@@ -103,7 +103,7 @@ const Index = () => {
                 </TabsList>
 
                 <TabsContent value="cards" className="space-y-0">
-                  <div className="grid gap-6 md:grid-cols-2">
+                  <div className="grid gap-6">
                     {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
                       <EstateCard
                         key={estate}
