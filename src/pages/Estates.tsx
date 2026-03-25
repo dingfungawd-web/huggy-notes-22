@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { fetchOrders, groupByEstate, type OrderRecord } from "@/lib/api";
+import { fetchOrders, groupByEstate, stripSpaces, type OrderRecord } from "@/lib/api";
 import { postEstateMeta } from "@/lib/estateMetaApi";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
