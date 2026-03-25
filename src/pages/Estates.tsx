@@ -90,10 +90,20 @@ const Estates = () => {
     <div className="min-h-screen">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
-          <Building2 className="h-7 w-7 text-primary shrink-0" />
-          <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">屋苑總覽</h1>
-          <div className="flex flex-1 max-w-md ml-auto gap-2">
+        <div className="mx-auto max-w-7xl px-6 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Building2 className="h-7 w-7 text-primary shrink-0" />
+              <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">屋苑總覽</h1>
+            </div>
+            <Link to="/">
+              <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+                <Search className="h-4 w-4" />
+                屋苑搜尋
+              </Button>
+            </Link>
+          </div>
+          <div className="mt-3">
             <Input
               placeholder="篩選屋苑名稱..."
               value={filter}
@@ -101,12 +111,6 @@ const Estates = () => {
               className="bg-background"
             />
           </div>
-          <Link to="/">
-            <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-              <Search className="h-4 w-4" />
-              屋苑搜尋
-            </Button>
-          </Link>
         </div>
       </header>
 
