@@ -1,4 +1,5 @@
 import type { TypeAnalysis, BucketDistribution } from "@/lib/orderAnalysis";
+import { PieChartSection } from "@/components/PieChartSection";
 import {
   Table,
   TableBody,

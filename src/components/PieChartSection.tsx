@@ -2,14 +2,16 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recha
 import type { Distribution } from "@/lib/orderAnalysis";
 
 const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--accent))",
-  "hsl(220 70% 55%)",
-  "hsl(160 60% 45%)",
-  "hsl(35 90% 55%)",
-  "hsl(340 70% 55%)",
-  "hsl(270 60% 55%)",
-  "hsl(190 70% 45%)",
+  "hsl(210 80% 50%)",   // blue
+  "hsl(25 90% 55%)",    // orange
+  "hsl(150 60% 42%)",   // green
+  "hsl(340 75% 55%)",   // rose
+  "hsl(270 65% 58%)",   // purple
+  "hsl(45 95% 50%)",    // amber
+  "hsl(190 75% 45%)",   // teal
+  "hsl(0 70% 55%)",     // red
+  "hsl(300 50% 50%)",   // magenta
+  "hsl(120 45% 52%)",   // lime
 ];
 
 interface PieChartSectionProps {

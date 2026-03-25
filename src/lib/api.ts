@@ -28,12 +28,17 @@ export async function fetchOrders(search?: string): Promise<OrderRecord[]> {
 
 export function groupByEstate(orders: OrderRecord[]): Map<string, OrderRecord[]> {
   const map = new Map<string, OrderRecord[]>();
+  // Use a lowercase key map to merge case variants under one canonical name
+  const canonMap = new Map<string, string>(); // lowercase -> first-seen name
   for (const order of orders) {
     const estate = extractEstateName(order.包裝備註);
-    if (!map.has(estate)) {
+    const key = estate.toLowerCase();
+    if (!canonMap.has(key)) {
+      canonMap.set(key, estate);
       map.set(estate, []);
     }
-    map.get(estate)!.push(order);
+    const canonical = canonMap.get(key)!;
+    map.get(canonical)!.push(order);
   }
   return map;
 }
