@@ -14,16 +14,34 @@ export interface OrderRecord {
   "四框/三框": string;
 }
 
+/** Strip all whitespace from a string for fuzzy comparison */
+export function stripSpaces(s: string): string {
+  return s.replace(/\s+/g, "");
+}
+
 export async function fetchOrders(search?: string): Promise<OrderRecord[]> {
   const url = new URL(APPS_SCRIPT_URL);
   if (search) {
-    url.searchParams.set("search", search);
+    // Send the longest single word to the server for broad matching,
+    // then we do precise space-insensitive filtering client-side.
+    const words = search.trim().split(/\s+/);
+    const longestWord = words.reduce((a, b) => (a.length >= b.length ? a : b), "");
+    url.searchParams.set("search", longestWord);
   }
   const response = await fetch(url.toString());
   if (!response.ok) {
     throw new Error("無法取得資料");
   }
-  return response.json();
+  const allResults: OrderRecord[] = await response.json();
+
+  // Client-side space-insensitive & case-insensitive filter
+  if (search) {
+    const needle = stripSpaces(search).toLowerCase();
+    return allResults.filter((o) =>
+      stripSpaces(o.包裝備註 || "").toLowerCase().includes(needle)
+    );
+  }
+  return allResults;
 }
 
 export function groupByEstate(orders: OrderRecord[]): Map<string, OrderRecord[]> {
