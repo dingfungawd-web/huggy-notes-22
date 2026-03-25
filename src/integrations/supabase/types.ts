@@ -18,18 +18,23 @@ export type Database = {
         Row: {
           created_at: string
           customer_confirmation_date: string | null
+          door_window: string | null
           fabric_color: string | null
           frame_color: string | null
           frame_count: number | null
+          frame_type: string | null
           framing_completion_date: string | null
           height_mm: number | null
           id: string
+          install_type: string | null
+          location: string | null
           model: string | null
           order_date: string | null
           order_note: string | null
           order_number: string | null
           package_note: string | null
           packaging_completion_date: string | null
+          pull_type: string | null
           scheduled_shipping_date: string | null
           sewing_completion_date: string | null
           shipping_date: string | null
@@ -42,18 +47,23 @@ export type Database = {
         Insert: {
           created_at?: string
           customer_confirmation_date?: string | null
+          door_window?: string | null
           fabric_color?: string | null
           frame_color?: string | null
           frame_count?: number | null
+          frame_type?: string | null
           framing_completion_date?: string | null
           height_mm?: number | null
           id?: string
+          install_type?: string | null
+          location?: string | null
           model?: string | null
           order_date?: string | null
           order_note?: string | null
           order_number?: string | null
           package_note?: string | null
           packaging_completion_date?: string | null
+          pull_type?: string | null
           scheduled_shipping_date?: string | null
           sewing_completion_date?: string | null
           shipping_date?: string | null
@@ -66,18 +76,23 @@ export type Database = {
         Update: {
           created_at?: string
           customer_confirmation_date?: string | null
+          door_window?: string | null
           fabric_color?: string | null
           frame_color?: string | null
           frame_count?: number | null
+          frame_type?: string | null
           framing_completion_date?: string | null
           height_mm?: number | null
           id?: string
+          install_type?: string | null
+          location?: string | null
           model?: string | null
           order_date?: string | null
           order_note?: string | null
           order_number?: string | null
           package_note?: string | null
           packaging_completion_date?: string | null
+          pull_type?: string | null
           scheduled_shipping_date?: string | null
           sewing_completion_date?: string | null
           shipping_date?: string | null
