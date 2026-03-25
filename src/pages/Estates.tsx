@@ -195,8 +195,8 @@ const Estates = () => {
               <Label>地區</Label>
               <Input
                 placeholder="例如：屯門、將軍澳..."
-                value={alias}
-                onChange={(e) => setAlias(e.target.value)}
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
                 加入後可用此地區名稱搜尋該屋苑
