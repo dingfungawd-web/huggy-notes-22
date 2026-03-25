@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Loader2, Building2, AlertCircle } from "lucide-react";
+import { useSearchParams, Link } from "react-router-dom";
+import { Search, Loader2, Building2, AlertCircle, LayoutGrid } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,8 +11,10 @@ import { EstateCard } from "@/components/EstateCard";
 import { exportEstateAsPDF } from "@/lib/exportPdf";
 
 const Index = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [submittedSearch, setSubmittedSearch] = useState("");
+  const [urlParams] = useSearchParams();
+  const initialSearch = urlParams.get("search") || "";
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
 
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: ["orders", submittedSearch],
@@ -47,6 +50,12 @@ const Index = () => {
               搜尋
             </Button>
           </div>
+          <Link to="/estates">
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+              <LayoutGrid className="h-4 w-4" />
+              屋苑總覽
+            </Button>
+          </Link>
         </div>
       </header>
 
