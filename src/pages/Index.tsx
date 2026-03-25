@@ -16,6 +16,18 @@ const Index = () => {
   const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
   const [showCombined, setShowCombined] = useState(false);
 
+  // Instant search: debounce input to trigger query
+  useEffect(() => {
+    const trimmed = searchTerm.trim();
+    const timer = setTimeout(() => {
+      setSubmittedSearch(trimmed);
+      if (trimmed !== submittedSearch) {
+        setShowCombined(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const searchLower = submittedSearch.toLowerCase();
 
   const { data: orders, isLoading, isError } = useQuery({
