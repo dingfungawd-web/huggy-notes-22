@@ -1,49 +1,56 @@
 import { OrderRecord } from "./api";
-import { generateEstateProfile } from "./orderAnalysis";
+import { generateEstateProfile, parseLocation, classifyFabric, isSpecialColor } from "./orderAnalysis";
+import type { TypeAnalysis, BucketDistribution, Distribution } from "./orderAnalysis";
 
 export function exportEstateAsPDF(estateName: string, orders: OrderRecord[]) {
   const profile = generateEstateProfile(estateName, orders);
 
-  const alertsHtml = profile.alerts
-    .map((a) => {
-      const bg = a.level === "red" ? "#fef2f2" : a.level === "yellow" ? "#fefce8" : "#f0fdf4";
-      const color = a.level === "red" ? "#dc2626" : a.level === "yellow" ? "#a16207" : "#15803d";
-      return `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:6px;margin-bottom:4px;font-size:13px;">${a.message}</div>`;
-    })
-    .join("");
+  const bucketTableHtml = (label: string, buckets: BucketDistribution[]) => {
+    if (buckets.length === 0) return "";
+    const headers = buckets.map((b) => `<th style="text-align:center;padding:4px 10px;">${b.label}</th>`).join("");
+    const counts = buckets.map((b) => `<td style="text-align:center;">${b.count}</td>`).join("");
+    const pcts = buckets.map((b) => `<td style="text-align:center;">${b.percentage}%</td>`).join("");
+    return `<p style="font-weight:600;margin:8px 0 4px;">${label}：</p>
+      <table><thead><tr><th style="width:50px;"></th>${headers}</tr></thead>
+      <tbody><tr><td><strong>數量</strong></td>${counts}</tr><tr><td><strong>佔比</strong></td>${pcts}</tr></tbody></table>`;
+  };
 
-  const distRow = (label: string, items: { label: string; percentage: number }[]) => {
+  const typeSection = (label: string, analysis: TypeAnalysis) => {
+    if (analysis.total === 0) return "";
+    let content = `<h3 style="margin:12px 0 6px;">${label}</h3>`;
+    if (analysis.allWithinStandard) {
+      content += `<p style="color:#15803d;font-weight:600;">尺寸：全部在標準範圍內 ✅</p>`;
+    } else {
+      content += `<p style="font-weight:600;">超標準尺寸記錄：</p>`;
+      content += `<table><thead><tr><th>位置</th><th>寬(mm)</th><th>高(mm)</th><th>開向</th><th>內/外安</th><th>超高</th><th>超闊</th></tr></thead><tbody>`;
+      for (const r of analysis.exceedRecords) {
+        content += `<tr><td>${r.位置}</td><td style="text-align:right">${r.寬}</td><td style="text-align:right">${r.高}</td><td>${r.開向}</td><td>${r.安裝}</td><td style="color:${r.超高 !== "-" ? "#c2410c" : "#999"}">${r.超高}</td><td style="color:${r.超闊 !== "-" ? "#c2410c" : "#999"}">${r.超闊}</td></tr>`;
+      }
+      content += `</tbody></table>`;
+      content += bucketTableHtml("高度分佈", analysis.heightDistribution);
+      content += bucketTableHtml("闊度分佈", analysis.widthDistribution);
+    }
+    return content;
+  };
+
+  const distTableHtml = (label: string, items: Distribution[], showClass = false) => {
     if (items.length === 0) return "";
-    const badges = items
-      .map((i) => `<span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:4px;">${i.label} ${i.percentage}%</span>`)
-      .join("");
-    return `<tr><td style="color:#666;width:60px;vertical-align:top;padding:4px 0;">${label}</td><td style="padding:4px 0;">${badges}</td></tr>`;
+    const headers = items.map((i) => `<th style="text-align:center;padding:4px 10px;">${i.label}</th>`).join("");
+    const counts = items.map((i) => `<td style="text-align:center;">${i.count}</td>`).join("");
+    const pcts = items.map((i) => `<td style="text-align:center;">${i.percentage}%</td>`).join("");
+    let classRow = "";
+    if (showClass) {
+      classRow = `<tr><td><strong>分類</strong></td>${items.map((i) =>
+        `<td style="text-align:center;color:${isSpecialColor(i.label) ? "#c2410c" : "#666"}">${isSpecialColor(i.label) ? "特別色 ⚠️" : "標準色"}</td>`
+      ).join("")}</tr>`;
+    }
+    return `<h3 style="margin:12px 0 6px;">${label}</h3>
+      <table><thead><tr><th style="width:50px;"></th>${headers}</tr></thead>
+      <tbody><tr><td><strong>數量</strong></td>${counts}</tr><tr><td><strong>佔比</strong></td>${pcts}</tr>${classRow}</tbody></table>`;
   };
 
-  const exceedBadges = (analysis: typeof profile.doorAnalysis, label: string) => {
-    if (analysis.exceedHeight.length === 0 && analysis.exceedWidth.length === 0) return "";
-    const badges = [
-      `<span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:4px;font-size:11px;">標準內 ${analysis.withinStandardPct}%</span>`,
-      ...analysis.exceedHeight.map((e) => `<span style="background:#fff7ed;color:#c2410c;padding:2px 8px;border-radius:4px;font-size:11px;">${e.label} ${e.percentage}% (${e.count})</span>`),
-      ...analysis.exceedWidth.map((e) => `<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:11px;">${e.label} ${e.percentage}% (${e.count})</span>`),
-    ].join(" ");
-    return `<div style="margin-bottom:8px;"><strong style="font-size:12px;">${label}：</strong>${badges}</div>`;
-  };
-
-  const rows = orders
-    .map(
-      (o) => `<tr>
-        <td>${o.包裝備註}</td>
-        <td>${o["門/窗"]}</td>
-        <td style="text-align:right">${o["寬(mm)"]}</td>
-        <td style="text-align:right">${o["高(mm)"]}</td>
-        <td>${o["單拉/對拉"]}</td>
-        <td>${o["內安/外安"]}</td>
-        <td>${o.框色}</td>
-        <td>${o.網材}</td>
-      </tr>`
-    )
-    .join("");
+  const pullText = profile.pullTypeDistribution.map((d) => `${d.label} ${d.count}件（${d.percentage}%）`).join(" ｜ ");
+  const installText = profile.installTypeDistribution.map((d) => `${d.label} ${d.count}件（${d.percentage}%）`).join(" ｜ ");
 
   const html = `<!DOCTYPE html>
 <html lang="zh-Hant">
@@ -55,78 +62,38 @@ export function exportEstateAsPDF(estateName: string, orders: OrderRecord[]) {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Noto Sans TC', sans-serif; padding: 30px; color: #1a1a2e; font-size: 13px; }
     h1 { font-size: 22px; margin-bottom: 2px; }
+    h3 { font-size: 14px; }
     .subtitle { color: #666; font-size: 13px; margin-bottom: 16px; }
-    .section { margin-bottom: 16px; }
-    .section-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; border-bottom: 2px solid #1e3a5f; padding-bottom: 4px; }
-    .stats { display: flex; gap: 16px; margin-bottom: 12px; }
-    .stat-box { background: #f8f9fa; border-radius: 8px; padding: 10px 16px; flex: 1; }
-    .stat-box .num { font-size: 24px; font-weight: 700; }
-    .stat-box .label { font-size: 11px; color: #666; }
-    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
     th { background: #1e3a5f; color: white; padding: 6px 8px; text-align: left; font-weight: 600; }
     td { padding: 4px 8px; border-bottom: 1px solid #e0e0e0; }
     tr:nth-child(even) { background: #f8f9fa; }
-    @media print {
-      body { padding: 15px; }
-      @page { size: landscape; margin: 10mm; }
-    }
+    hr { border: none; border-top: 1px solid #ddd; margin: 16px 0; }
+    @media print { body { padding: 15px; } @page { size: landscape; margin: 10mm; } }
   </style>
 </head>
 <body>
   <h1>📋 ${estateName} — 屋苑小檔案</h1>
-  <p class="subtitle">共 ${profile.totalOrders} 項訂單 ｜ 列印日期：${new Date().toLocaleDateString("zh-Hant")}</p>
+  <p class="subtitle">
+    <strong>總訂貨數量：${profile.totalOrders}件</strong>（門：${profile.doorAnalysis.total}件 ｜ 窗：${profile.windowAnalysis.total}件）｜ 客戶數：${profile.customerCount}<br>
+    列印日期：${new Date().toLocaleDateString("zh-Hant")}
+  </p>
 
-  <div class="section">
-    <div class="section-title">⚠️ 報價提醒</div>
-    ${alertsHtml}
-  </div>
+  ${typeSection("門（回捲式）", profile.doorAnalysis)}
+  ${typeSection("窗（回捲式）", profile.windowAnalysis)}
 
-  <div class="stats">
-    <div class="stat-box">
-      <div class="num">${profile.doorAnalysis.total}</div>
-      <div class="label">門訂單</div>
-      <div style="font-size:11px;color:#666;">標準內 ${profile.doorAnalysis.withinStandardPct}%</div>
-    </div>
-    <div class="stat-box">
-      <div class="num">${profile.windowAnalysis.total}</div>
-      <div class="label">窗訂單</div>
-      <div style="font-size:11px;color:#666;">標準內 ${profile.windowAnalysis.withinStandardPct}%</div>
-    </div>
-    <div class="stat-box">
-      <div class="num">${profile.totalOrders}</div>
-      <div class="label">總訂單</div>
-    </div>
-  </div>
+  <hr>
+  ${distTableHtml("框色分佈", profile.frameColorDistribution, true)}
+  ${distTableHtml("網材分佈", profile.fabricDistribution)}
 
-  <div class="section">
-    <div class="section-title">📐 超標尺寸分佈</div>
-    ${exceedBadges(profile.doorAnalysis, "門")}
-    ${exceedBadges(profile.windowAnalysis, "窗")}
-  </div>
+  <hr>
+  <h3 style="margin:12px 0 6px;">開向及安裝方式</h3>
+  <p><strong>開向：</strong>${pullText}</p>
+  <p><strong>安裝：</strong>${installText}</p>
 
-  <div class="section">
-    <div class="section-title">📊 訂單分佈</div>
-    <table style="width:auto;">
-      ${distRow("款式", profile.modelDistribution)}
-      ${distRow("框色", profile.frameColorDistribution)}
-      ${distRow("網材", profile.fabricDistribution)}
-      ${distRow("拉式", profile.pullTypeDistribution)}
-      ${distRow("安裝", profile.installTypeDistribution)}
-    </table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">📝 訂單明細</div>
-    <table>
-      <thead>
-        <tr>
-          <th>包裝備註</th><th>門/窗</th><th>寬(mm)</th><th>高(mm)</th>
-          <th>單拉/對拉</th><th>內安/外安</th><th>框色</th><th>網材</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>
+  <hr>
+  <h3 style="margin:12px 0 6px;">備註</h3>
+  <p style="color:#999;font-style:italic;">（待度尺同事補充）</p>
 </body>
 </html>`;
 
