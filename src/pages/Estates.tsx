@@ -98,7 +98,7 @@ const Estates = () => {
           <Link to="/">
             <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
               <Search className="h-4 w-4" />
-              訂單搜尋
+              屋苑搜尋
             </Button>
           </Link>
         </div>

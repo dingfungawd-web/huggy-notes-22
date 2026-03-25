@@ -8,6 +8,21 @@ export interface EstateMeta {
   建立時間: string;
 }
 
+// GAS may return English or Chinese keys depending on sheet headers
+interface RawMetaRecord {
+  [key: string]: string;
+}
+
+function normalizeMetaRecord(raw: RawMetaRecord): EstateMeta {
+  return {
+    屋苑名稱: raw["屋苑名稱"] || raw["estate"] || "",
+    別名: raw["別名"] || raw["type"] || "",
+    門窗顏色: raw["門窗顏色"] || raw["value"] || "",
+    備註: raw["備註"] || raw["timestamp"] || "",
+    建立時間: raw["建立時間"] || raw["created"] || "",
+  };
+}
+
 export async function fetchAllEstates(): Promise<string[]> {
   const url = new URL(APPS_SCRIPT_URL);
   url.searchParams.set("action", "listEstates");
@@ -22,7 +37,8 @@ export async function fetchEstateMeta(estateName: string): Promise<EstateMeta[]>
   url.searchParams.set("estate", estateName);
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error("無法取得屋苑備註");
-  return res.json();
+  const raw: RawMetaRecord[] = await res.json();
+  return raw.map(normalizeMetaRecord);
 }
 
 export async function postEstateMeta(data: {

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { fetchOrders, groupByEstate, type OrderRecord } from "@/lib/api";
 import { EstateCard } from "@/components/EstateCard";
+import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const [urlParams] = useSearchParams();
@@ -34,7 +35,7 @@ const Index = () => {
       <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
           <Building2 className="h-7 w-7 text-primary shrink-0" />
-          <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">屋苑訂單查詢系統</h1>
+          <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">屋苑數據分析系統</h1>
           <div className="flex flex-1 max-w-xl ml-auto gap-2">
             <Input
               placeholder="輸入屋苑或大廈名稱..."
@@ -99,15 +100,38 @@ const Index = () => {
                 <p className="text-lg text-muted-foreground">找不到「{submittedSearch}」的相關訂單</p>
               </div>
             ) : (
-              <div className="grid gap-6">
-                {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
-                  <EstateCard
-                    key={estate}
-                    estateName={estate}
-                    orders={estateOrders}
-                  />
-                ))}
-              </div>
+              <>
+                {/* Estate quick-nav */}
+                {grouped.size > 1 && (
+                  <div className="mb-6 flex flex-wrap gap-2">
+                    {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
+                      <Button
+                        key={estate}
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => {
+                          document.getElementById(`estate-${estate}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                      >
+                        {estate}
+                        <Badge variant="secondary" className="ml-1 text-xs">{estateOrders.length}</Badge>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="grid gap-6">
+                  {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
+                    <div key={estate} id={`estate-${estate}`} className="scroll-mt-24">
+                      <EstateCard
+                        estateName={estate}
+                        orders={estateOrders}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}
