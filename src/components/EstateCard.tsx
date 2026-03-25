@@ -32,7 +32,7 @@ export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardP
     enabled: !hideMeta,
   });
 
-  const aliases = hideMeta ? [] : (metaRecords?.filter((m) => m.別名).map((m) => m.別名) || []);
+  const districts = hideMeta ? [] : (metaRecords?.filter((m) => m.地區).map((m) => m.地區) || []);
   const colors = hideMeta ? [] : (metaRecords?.filter((m) => m.門窗顏色).map((m) => m.門窗顏色) || []);
   const correctEstates = hideMeta ? [] : (metaRecords?.filter((m) => m.異常屋苑名稱正確歸類).map((m) => m.異常屋苑名稱正確歸類) || []);
   const notes = hideMeta ? [] : (metaRecords?.filter((m) => m.備註).map((m) => m.備註) || []);

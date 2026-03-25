@@ -24,7 +24,7 @@ export function EstateMetaSummary({ estateNames }: EstateMetaSummaryProps) {
   queries.forEach((q, i) => {
     const estate = estateNames[i];
     q.data?.forEach((m) => {
-      if (m.別名) allDistricts.push({ estate, value: m.別名 });
+      if (m.地區) allDistricts.push({ estate, value: m.地區 });
       if (m.門窗顏色) allColors.push({ estate, value: m.門窗顏色 });
       if (m.備註) allNotes.push({ estate, value: m.備註 });
     });
