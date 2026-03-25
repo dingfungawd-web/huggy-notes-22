@@ -20,14 +20,16 @@ import {
 interface EstateCardProps {
   estateName: string;
   orders: OrderRecord[];
+  hideMeta?: boolean;
 }
 
-export function EstateCard({ estateName, orders }: EstateCardProps) {
+export function EstateCard({ estateName, orders, hideMeta = false }: EstateCardProps) {
   const profile = generateEstateProfile(estateName, orders);
 
   const { data: metaRecords } = useQuery({
     queryKey: ["estateMeta", estateName],
     queryFn: () => fetchEstateMeta(estateName),
+    enabled: !hideMeta,
   });
 
   const aliases = metaRecords?.filter((m) => m.別名).map((m) => m.別名) || [];
