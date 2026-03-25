@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { Search, Loader2, Building2, AlertCircle, LayoutGrid, BarChart3 } from "lucide-react";
@@ -15,6 +15,18 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
   const [showCombined, setShowCombined] = useState(false);
+
+  // Instant search: debounce input to trigger query
+  useEffect(() => {
+    const trimmed = searchTerm.trim();
+    const timer = setTimeout(() => {
+      setSubmittedSearch(trimmed);
+      if (trimmed !== submittedSearch) {
+        setShowCombined(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const searchLower = submittedSearch.toLowerCase();
 
