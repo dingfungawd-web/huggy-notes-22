@@ -31,12 +31,59 @@ function mapRowToOrder(row: Record<string, unknown>): OrderRecord {
   };
 }
 
+// Look up aliases: given a search term, find additional terms to search for
+async function getExpandedSearchTerms(term: string): Promise<string[]> {
+  const terms = [term];
+  const lowerTerm = term.toLowerCase();
+
+  // 1. Check if search term matches any alias → get canonical name
+  const { data: aliasHits } = await supabase
+    .from("estate_aliases")
+    .select("canonical_name")
+    .ilike("alias_name", `%${lowerTerm}%`);
+
+  if (aliasHits && aliasHits.length > 0) {
+    for (const hit of aliasHits) {
+      const canon = (hit.canonical_name as string).replace(/\s/g, "");
+      if (!terms.some((t) => t.toLowerCase() === canon.toLowerCase())) {
+        terms.push(canon);
+      }
+    }
+  }
+
+  // 2. Check if search term IS a canonical name → get all aliases
+  const { data: reverseHits } = await supabase
+    .from("estate_aliases")
+    .select("alias_name")
+    .ilike("canonical_name", `%${lowerTerm}%`);
+
+  if (reverseHits && reverseHits.length > 0) {
+    for (const hit of reverseHits) {
+      const alias = (hit.alias_name as string).replace(/\s/g, "");
+      if (!terms.some((t) => t.toLowerCase() === alias.toLowerCase())) {
+        terms.push(alias);
+      }
+    }
+  }
+
+  return terms;
+}
+
 export async function fetchOrders(search?: string, signal?: AbortSignal): Promise<OrderRecord[]> {
   if (!search) {
     return [];
   }
 
-  const term = search.replace(/\s/g, "");
+  const baseTerm = search.replace(/\s/g, "");
+
+  // Expand search with aliases
+  const searchTerms = await getExpandedSearchTerms(baseTerm);
+
+  // Build OR filter for all terms
+  const orFilter = searchTerms
+    .map((t) => `package_note.ilike.%${t}%`)
+    .join(",");
+
   // Fetch all matching rows (bypass 1000-row default limit)
   const allRows: Record<string, unknown>[] = [];
   const pageSize = 1000;
@@ -49,7 +96,7 @@ export async function fetchOrders(search?: string, signal?: AbortSignal): Promis
     const { data, error } = await supabase
       .from("orders")
       .select("package_note, model, door_window, frame_color, fabric_color, location, width_mm, height_mm, pull_type, install_type, frame_type")
-      .ilike("package_note", `%${term}%`)
+      .or(orFilter)
       .range(from, from + pageSize - 1);
 
     if (error) throw new Error(`查詢失敗: ${error.message}`);
