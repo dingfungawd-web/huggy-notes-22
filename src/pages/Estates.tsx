@@ -181,6 +181,17 @@ const Estates = () => {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
+              <Label>異常屋苑名稱正確歸類</Label>
+              <Input
+                placeholder="例如：Park YOHO（將此屋苑歸類至正確名稱）"
+                value={correctEstate}
+                onChange={(e) => setCorrectEstate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                若此屋苑名稱為簡寫或錯誤，輸入正確屋苑名稱後，搜尋該正確名稱時也會包含此屋苑的數據
+              </p>
+            </div>
+            <div className="space-y-2">
               <Label>地區</Label>
               <Input
                 placeholder="例如：屯門、將軍澳..."
@@ -198,17 +209,6 @@ const Estates = () => {
                 value={doorWindowColor}
                 onChange={(e) => setDoorWindowColor(e.target.value)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label>異常屋苑名稱正確歸類</Label>
-              <Input
-                placeholder="例如：Park YOHO（將此屋苑歸類至正確名稱）"
-                value={correctEstate}
-                onChange={(e) => setCorrectEstate(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                若此屋苑名稱為簡寫或錯誤，輸入正確屋苑名稱後，搜尋該正確名稱時也會包含此屋苑的數據
-              </p>
             </div>
             <div className="space-y-2">
               <Label>備註</Label>
