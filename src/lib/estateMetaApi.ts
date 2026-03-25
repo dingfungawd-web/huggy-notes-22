@@ -45,7 +45,7 @@ export async function fetchEstateMeta(estateName: string): Promise<EstateMeta[]>
 
 export async function postEstateMeta(data: {
   estateName: string;
-  alias?: string;
+  district?: string;
   doorWindowColor?: string;
   correctEstate?: string;
   note?: string;
