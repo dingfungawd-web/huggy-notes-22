@@ -34,7 +34,7 @@ const Index = () => {
       <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
           <Building2 className="h-7 w-7 text-primary shrink-0" />
-          <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">屋苑訂單查詢系統</h1>
+          <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">屋苑數據分析系統</h1>
           <div className="flex flex-1 max-w-xl ml-auto gap-2">
             <Input
               placeholder="輸入屋苑或大廈名稱..."
