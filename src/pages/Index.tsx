@@ -99,15 +99,38 @@ const Index = () => {
                 <p className="text-lg text-muted-foreground">找不到「{submittedSearch}」的相關訂單</p>
               </div>
             ) : (
-              <div className="grid gap-6">
-                {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
-                  <EstateCard
-                    key={estate}
-                    estateName={estate}
-                    orders={estateOrders}
-                  />
-                ))}
-              </div>
+              <>
+                {/* Estate quick-nav */}
+                {grouped.size > 1 && (
+                  <div className="mb-6 flex flex-wrap gap-2">
+                    {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
+                      <Button
+                        key={estate}
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => {
+                          document.getElementById(`estate-${estate}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                      >
+                        {estate}
+                        <Badge variant="secondary" className="ml-1 text-xs">{estateOrders.length}</Badge>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="grid gap-6">
+                  {Array.from(grouped.entries()).map(([estate, estateOrders]) => (
+                    <div key={estate} id={`estate-${estate}`} className="scroll-mt-24">
+                      <EstateCard
+                        estateName={estate}
+                        orders={estateOrders}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}
