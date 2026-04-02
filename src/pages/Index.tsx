@@ -164,7 +164,10 @@ const Index = () => {
                       variant={showCombined ? "default" : "outline"}
                       size="sm"
                       className="gap-1.5"
-                      onClick={() => setShowCombined(!showCombined)}
+                      onClick={() => {
+                        setShowCombined(!showCombined);
+                        if (!showCombined) incrementCount.mutate();
+                      }}
                     >
                       <BarChart3 className="h-4 w-4" />
                       全部屋苑總數據
