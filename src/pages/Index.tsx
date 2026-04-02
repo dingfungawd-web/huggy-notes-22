@@ -85,12 +85,19 @@ const Index = () => {
               <Building2 className="h-7 w-7 text-primary shrink-0" />
               <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">屋苑數據分析系統</h1>
             </div>
-            <Link to="/estates">
-              <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-                <LayoutGrid className="h-4 w-4" />
-                屋苑總覽
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 rounded-md border bg-background px-2.5 py-1.5 text-sm shrink-0">
+                <Hash className="h-4 w-4 text-primary" />
+                <span className="text-muted-foreground">搜尋次數</span>
+                <span className="font-semibold text-foreground">{searchCount ?? 0}</span>
+              </div>
+              <Link to="/estates">
+                <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+                  <LayoutGrid className="h-4 w-4" />
+                  屋苑總覽
+                </Button>
+              </Link>
+            </div>
           </div>
           <div className="flex gap-2 mt-3">
             <Input
