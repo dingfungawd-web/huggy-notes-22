@@ -104,11 +104,27 @@ export type Database = {
         }
         Relationships: []
       }
+      search_stats: {
+        Row: {
+          count: number
+          id: number
+        }
+        Insert: {
+          count?: number
+          id?: number
+        }
+        Update: {
+          count?: number
+          id?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      increment_search_count: { Args: never; Returns: number }
       search_orders_by_terms: {
         Args: { search_terms: string[] }
         Returns: {

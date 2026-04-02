@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
-import { Search, Loader2, Building2, AlertCircle, LayoutGrid, BarChart3 } from "lucide-react";
+import { Search, Loader2, Building2, AlertCircle, LayoutGrid, BarChart3, Hash } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,31 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
   const [showCombined, setShowCombined] = useState(false);
+  const qc = useQueryClient();
+
+  // Fetch search count
+  const { data: searchCount } = useQuery({
+    queryKey: ["searchCount"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("search_stats")
+        .select("count")
+        .eq("id", 1)
+        .single();
+      if (error) throw error;
+      return data.count as number;
+    },
+    staleTime: 30_000,
+  });
+
+  // Increment search count
+  const incrementCount = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("increment_search_count");
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["searchCount"] }),
+  });
 
   // Instant search: debounce input to trigger query
   useEffect(() => {
@@ -46,6 +72,7 @@ const Index = () => {
     if (searchTerm.trim()) {
       setSubmittedSearch(searchTerm.trim());
       setShowCombined(false);
+      incrementCount.mutate();
     }
   };
 
@@ -58,12 +85,19 @@ const Index = () => {
               <Building2 className="h-7 w-7 text-primary shrink-0" />
               <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">屋苑數據分析系統</h1>
             </div>
-            <Link to="/estates">
-              <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-                <LayoutGrid className="h-4 w-4" />
-                屋苑總覽
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 rounded-md border bg-background px-2.5 py-1.5 text-sm shrink-0">
+                <Hash className="h-4 w-4 text-primary" />
+                <span className="text-muted-foreground">搜尋次數</span>
+                <span className="font-semibold text-foreground">{searchCount ?? 0}</span>
+              </div>
+              <Link to="/estates">
+                <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+                  <LayoutGrid className="h-4 w-4" />
+                  屋苑總覽
+                </Button>
+              </Link>
+            </div>
           </div>
           <div className="flex gap-2 mt-3">
             <Input
