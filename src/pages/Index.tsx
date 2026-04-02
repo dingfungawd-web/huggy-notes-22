@@ -16,6 +16,31 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
   const [showCombined, setShowCombined] = useState(false);
+  const qc = useQueryClient();
+
+  // Fetch search count
+  const { data: searchCount } = useQuery({
+    queryKey: ["searchCount"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("search_stats")
+        .select("count")
+        .eq("id", 1)
+        .single();
+      if (error) throw error;
+      return data.count as number;
+    },
+    staleTime: 30_000,
+  });
+
+  // Increment search count
+  const incrementCount = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("increment_search_count");
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["searchCount"] }),
+  });
 
   // Instant search: debounce input to trigger query
   useEffect(() => {
