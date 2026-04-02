@@ -72,7 +72,6 @@ const Index = () => {
     if (searchTerm.trim()) {
       setSubmittedSearch(searchTerm.trim());
       setShowCombined(false);
-      incrementCount.mutate();
     }
   };
 
@@ -165,7 +164,10 @@ const Index = () => {
                       variant={showCombined ? "default" : "outline"}
                       size="sm"
                       className="gap-1.5"
-                      onClick={() => setShowCombined(!showCombined)}
+                      onClick={() => {
+                        setShowCombined(!showCombined);
+                        if (!showCombined) incrementCount.mutate();
+                      }}
                     >
                       <BarChart3 className="h-4 w-4" />
                       全部屋苑總數據
@@ -180,6 +182,7 @@ const Index = () => {
                         size="sm"
                         className="gap-1.5"
                         onClick={() => {
+                          incrementCount.mutate();
                           if (showCombined) {
                             setShowCombined(false);
                             setTimeout(() => {
