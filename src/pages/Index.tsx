@@ -72,6 +72,7 @@ const Index = () => {
     if (searchTerm.trim()) {
       setSubmittedSearch(searchTerm.trim());
       setShowCombined(false);
+      incrementCount.mutate();
     }
   };
 
