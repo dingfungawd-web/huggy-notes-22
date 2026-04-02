@@ -182,6 +182,7 @@ const Index = () => {
                         size="sm"
                         className="gap-1.5"
                         onClick={() => {
+                          incrementCount.mutate();
                           if (showCombined) {
                             setShowCombined(false);
                             setTimeout(() => {
